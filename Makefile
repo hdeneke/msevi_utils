@@ -18,7 +18,8 @@ LDFLAGS		= $(LIBRARIES)
 EXES  = msevi_l15_hrit2hdf msevi_l15_hrit2pgm 
 #msevi_angles msevi_pro_info
 COBJ  =	msevi_l15.o msevi_l15hrit.o cgms_xrit.o msevi_l15hdf.o geos.o \
-	sunpos.o timeutils.o memutils.o h5utils.o fileutils.o cds_time.o  
+	sunpos.o timeutils.o memutils.o h5utils.o fileutils.o cds_time.o \
+	parson.o 
 
 all: $(EXES)
 
