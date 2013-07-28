@@ -16,7 +16,6 @@
 #include "mathutils.h"
 #include "timeutils.h"
 #include "cgms_xrit.h"
-#include "mseviri.h"
 #include "msevi_l15.h"
 #include "msevi_l15hrit.h"
 #include "eum_wavelet.h"

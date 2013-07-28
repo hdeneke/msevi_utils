@@ -12,7 +12,6 @@
 #include "timeutils.h"
 #include "cds_time.h"
 #include "h5utils.h"
-#include "mseviri.h"
 #include "msevi_l15.h"
 #include "msevi_l15hrit.h"
 
