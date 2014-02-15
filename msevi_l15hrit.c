@@ -19,6 +19,7 @@
 #include "msevi_l15.h"
 #include "msevi_l15hrit.h"
 #include "eum_wavelet.h"
+#include "sunpos.h"
 
 /* SEVIRI L15 header record lengths */
 /* TODO: ???? re-check, 1 byte for version seems to be missing ??? */
@@ -495,6 +496,21 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 		}
 	}
 
+	{ /* get image acquisition record */
+		{ /* planned acquisition time */
+			struct _planned_acquisition_time *pat = 
+				&header->image_acquisition.planned_acquisition_time;
+
+			rec_ptr = data + header_rec_off[2];
+			memcpy_be16toh( &pat->true_repeat_cycle_start.days,  rec_ptr+0, 1);
+			memcpy_be32toh( &pat->true_repeat_cycle_start.msec, rec_ptr+2, 1);
+			memcpy_be16toh( &pat->planned_fwd_scan_end.days,  rec_ptr+10, 1);
+			memcpy_be32toh( &pat->planned_fwd_scan_end.msec, rec_ptr+12, 1);
+			memcpy_be16toh( &pat->planned_repeat_cylce_end.days,  rec_ptr+20, 1);
+			memcpy_be32toh( &pat->planned_repeat_cylce_end.msec, rec_ptr+22, 1);
+		}
+	}      
+
 	{ /* get image description record */
 		{  /* type of projection */
 			struct _projection_description *pd = 
@@ -784,6 +800,8 @@ int msevi_l15hrit_annotate_image( struct msevi_l15_image   *img,
 				  struct msevi_l15_trailer *tra,
 				  struct msevi_chaninf *chaninf )
 {
+	double esd, jd;
+
 	/* set slope/offset */
 	img->cal_slope  = hdr->radiometric_processing.l15_image_calibration[img->channel_id-1].cal_slope;
 	img->cal_offset = hdr->radiometric_processing.l15_image_calibration[img->channel_id-1].cal_offset;
@@ -791,5 +809,24 @@ int msevi_l15hrit_annotate_image( struct msevi_l15_image   *img,
 	/* set satellite id constant */
 	img->spacecraft_id = hdr->satellite_status.satellite_definition.satellite_id;
 
+	/* channel attributes */
+	img->f0        = chaninf->f0;
+	img->lambda_c  = chaninf->lambda_c;
+	if( chaninf->nu_c>0.0 ) {
+		img->nu_c      = chaninf->nu_c;
+	} else {
+		img->nu_c = 0.01/img->lambda_c;
+	}
+	img->alpha     = chaninf->alpha;
+	img->beta      = chaninf->beta;
+	if (img->f0>0) {
+		jd = time_cds2jday( &hdr->image_acquisition.planned_acquisition_time.true_repeat_cycle_start, EPOCH_TAI );
+		esd = sun_earth_distance(jd);
+		img->refl_slope = img->cal_slope * M_PI * SQR(esd)/img->f0;
+		img->refl_offset = img->cal_offset * M_PI * SQR(esd)/img->f0;
+	} else {
+		img->refl_slope   = 0.0;
+		img->refl_offset  = 0.0;
+	}
 	return 0;
 }

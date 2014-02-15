@@ -38,12 +38,23 @@ int msevi_l15hdf_write_image( hid_t gid, struct msevi_l15_image *img )
 	/* add attributes */
 	r = H5LTset_attribute_double(gid, dset, "cal_slope", &img->cal_slope, 1);
 	r = H5LTset_attribute_double(gid, dset, "cal_offset", &img->cal_offset, 1);
-	r = H5LTset_attribute_ushort(gid, dset, "saellitet_id", &img->spacecraft_id, 1);
 	r = H5LTset_attribute_ushort(gid, dset, "channel_id", &img->channel_id, 1);
 	r = H5LTset_attribute_string(gid, dset, "units",  "mWm-2sr-1(cm-1)-1" );
-	snprintf( long_name, 64, "toa_spectral_bidirectional_reflectance_%s", 
+	snprintf( long_name, 64, "toa_spectral_radiance_%s", 
 		  msevi_id2chan(img->channel_id) );
 	r = H5LTset_attribute_string(gid, dset, "long_name",  long_name );
+	r = H5LTset_attribute_double(gid, dset, "lambda_c", &img->lambda_c, 1);
+	if( img->channel_id>=MSEVI_CHAN_IR_039 && img->channel_id<=MSEVI_CHAN_IR_134 ) {
+		/* thermal channels */
+		r = H5LTset_attribute_double(gid, dset, "nu_c", &img->nu_c, 1);
+		r = H5LTset_attribute_double(gid, dset, "alpha", &img->alpha, 1);
+		r = H5LTset_attribute_double(gid, dset, "beta", &img->beta, 1);
+	}
+	if( img->channel_id<=MSEVI_CHAN_IR_039 || img->channel_id==MSEVI_CHAN_HRV ) {
+		r = H5LTset_attribute_double(gid, dset, "f0", &img->f0, 1);
+		r = H5LTset_attribute_double(gid, dset, "refl_offset", &img->refl_offset, 1);
+		r = H5LTset_attribute_double(gid, dset, "refl_slope", &img->refl_slope, 1);
+	}
 
 	/*  add HDF image attributes */
 	r = H5LTset_attribute_string(gid, dset, "CLASS", "IMAGE" );

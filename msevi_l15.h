@@ -49,6 +49,8 @@ struct msevi_l15_image {
 	uint16_t  channel_id;
 	uint16_t  segment_id;
 	double    cal_slope, cal_offset;
+	double    f0, refl_slope, refl_offset;
+	double    lambda_c, nu_c, alpha, beta;
 
 	uint16_t  *counts;
 	struct msevi_l15_coverage coverage;
@@ -117,6 +119,11 @@ struct msevi_l15_header {
 	} satellite_status;
 
 	struct _image_acquisition {
+		struct _planned_acquisition_time {
+			struct cds_time true_repeat_cycle_start;
+			struct cds_time planned_fwd_scan_end;
+			struct cds_time planned_repeat_cylce_end;
+		} planned_acquisition_time;
 	} image_acquisition;
 
 	struct _celestial_events {
