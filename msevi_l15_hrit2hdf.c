@@ -326,6 +326,11 @@ int main (int argc, char **argv)
 
 		satinf->chaninf[i].cal_slope = img->cal_slope;
 		satinf->chaninf[i].cal_offset = img->cal_offset;
+		satinf->chaninf[i].refl_slope = img->refl_slope;
+		satinf->chaninf[i].refl_offset = img->refl_offset;
+		if( chaninf->nu_c<=0.0 ) {
+			chaninf->nu_c  = 0.01/chaninf->lambda_c;
+		}
 		printf("name=%s id=%d\n", satinf->chaninf[i].name, satinf->chaninf[i].id);
 		printf("cal_slope=%f cal_offset=%f\n", satinf->chaninf[i].cal_slope, satinf->chaninf[i].cal_offset);
 		printf("lambda_c=%f\n", satinf->chaninf[i].lambda_c);
