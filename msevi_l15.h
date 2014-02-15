@@ -241,22 +241,41 @@ struct msevi_l15_trailer {
 
 struct msevi_chaninf {
 	char      name[8];
-	uint16_t  id;
+	int       id;
 	double    cal_slope;
 	double    cal_offset;
-	double    nu_c;
 	double    f0;
+	double    refl_slope;
+	double    refl_offset;
+	double    lambda_c;
+	double    nu_c;
 	double    alpha;
 	double    beta;
 };
- 
+
+struct msevi_satinf {
+  	char      name[8];
+  	char      long_name[32];
+	uint16_t  id;
+	struct msevi_chaninf chaninf[MSEVI_NR_CHAN];
+};
+
+struct msevi_region {
+	char name[16];
+	int  lin0;
+	int  nlin;
+	int  col0;
+	int  ncol;
+};
+
 struct msevi_l15_image *msevi_l15_image_alloc( int nlin, int ncol );
 void msevi_l15_image_free( struct msevi_l15_image *img );
 
-int msevi_get_chaninf( int sat_id, int chan_id, struct msevi_chaninf *ci );
+struct msevi_chaninf *msevi_get_chaninf( struct msevi_satinf *satinf, int chan_id );
 const int msevi_chan2id( const char *chan );
 const char* msevi_id2chan( int id );
-
+struct msevi_satinf *msevi_read_satinf( char *file, int sat_id );
+struct msevi_region *msevi_read_region( char *file, char *svc, char *region );
 #ifdef __cplusplus
 }
 #endif

@@ -33,6 +33,7 @@ struct prog_opts{
 	char   *chan[12];
 	time_t time;
 	char   *dir;
+	char   *region;
 	struct msevi_l15_coverage coverage;
 	int    sunpos;
 	int    satpos;
@@ -46,6 +47,7 @@ struct prog_opts{
 		      "ir_134", "hrv" },
 	.time     = 0,
 	.dir      = ".",
+	.region   = "eu",
 	//.coverage = { "vis_ir", 2957, 3556, 1557, 2356}, /* RSS */
 	.coverage = { "vis_ir", 2957, 3556, 1357, 2156}, /* HRS */
 	.sunpos   = 0,
@@ -64,6 +66,7 @@ static void print_usage (char *prog_name)
 		 "\t-d DIR, --dir=DIR\tdirectory containing the HRIT files (default:\n\t\t\t\tcurrent dir)\n"
 		 "\t-S, --sun\t\tadd sun angles\n"
 		 "\t-V, --view\t\tadd satellite viewing angles\n"
+		 "\t-r, --region\t\tspecify region\n"
 		 "\t-t TIME, --time=TIME\ttime of SEVIRI scan\n", prog_name );
 	return;
 }
@@ -97,6 +100,9 @@ static int parse_args (int argc, char **argv)
 			popts.satpos = 1;
 			break;
 		case 'c':
+			break;
+		case 'r':
+			popts.region = optarg;
 			break;
 		case 't':
 			r = parse_utc_timestr( optarg, "%Y%m%d%H%M", &popts.time);
@@ -158,18 +164,19 @@ int main (int argc, char **argv)
 {
 	hid_t fid;
 	hid_t img_gid, meta_gid, lsi_gid, geom_gid;
-	int i, r, nlin, ncol, sat_id;
+	int i, r, npix, sat_id;
 	char *fnam_hdf = NULL;
 	struct msevi_l15hrit_flist *flist;
-	char region[]  = "eu";
-	char *service;
-	char *sat;
+	char *svc;
 	double x0, y0, dx, dy;
 	const int coff=1856, cfac=13642337, loff=1856, lfac=13642337;
 
 	struct msevi_l15_header  *header;
 	struct msevi_l15_trailer *trailer;
-	struct msevi_l15_image *img;
+	struct msevi_l15_image   *img;
+	struct msevi_satinf      *satinf;
+	struct msevi_region      *reg;
+
 	char *timestr;
 	struct cds_time *line_acq_time;
 	double jd;
@@ -206,36 +213,39 @@ int main (int argc, char **argv)
 	}
 
 	if( strstr(flist->prologue,"RSS") ) {
-		service = "rss";
-		popts.coverage.eastern_column = 1557;
-		popts.coverage.western_column = 2356;
+		svc = "rss";
 	} else {
-		service = "hrs";
+		svc = "pzs";
 	}
 
 	/* init misc. parameters */
 	sat_id = header->satellite_status.satellite_definition.satellite_id;
-	switch( sat_id ) {
-	case 321:
-		sat = "msg1";
-		break;
-	case 322:
-		sat = "msg2";
-		break;
-	default:
-		printf("ERROR: unknown sat_id=%d\n", sat_id );
+
+	satinf = msevi_read_satinf( "msevi_satinf.json", sat_id );
+	if( satinf==NULL ) {
+		printf("ERROR: sat_id=%d\n", sat_id );
+		printf("Unable to read satellite info\n" );
+		return -1;
+	}
+	reg = msevi_read_region( "msevi_region.json", svc, popts.region );
+	if( reg==NULL ) {
+		printf("ERROR: region=%s svc=%s\n", popts.region, svc);
+		printf("Unable to find region\n" );
 		return -1;
 	}
 
-	nlin = popts.coverage.northern_line-popts.coverage.southern_line+1;
-	ncol = popts.coverage.western_column-popts.coverage.eastern_column+1;
-	line_acq_time = calloc( nlin, sizeof(struct cds_time));
+	popts.coverage.northern_line  = 3712-reg->lin0;
+	popts.coverage.southern_line  = 3712-(reg->lin0+reg->nlin-1);
+	popts.coverage.western_column = 3712-reg->col0;
+	popts.coverage.eastern_column = 3712-(reg->col0+reg->ncol-1);
+
+	line_acq_time = calloc( reg->nlin, sizeof(struct cds_time));
 
 	/* Create file ... */
 	fnam_hdf = calloc( strlen(popts.dir)+256, 1 );
 	timestr = get_utc_timestr( "%Y%m%d%H%M", popts.time );
-	sprintf( fnam_hdf, "%s/%s-sevi-%s-l15-%s-%s.h5", popts.dir, sat, timestr,
-		 service, region );
+	sprintf( fnam_hdf, "%s/%s-sevi-%s-l15-%s-%s.h5", popts.dir, satinf->name, timestr,
+		 svc, popts.region );
 	printf( "Creating: %s\n", fnam_hdf );
 	free(timestr);
 
@@ -258,7 +268,7 @@ int main (int argc, char **argv)
 	/* ... read channels and add images to HDF file */
 	for( i=0; i<popts.nchan; i++ ) {
 		int r, id;
-		struct msevi_chaninf chaninf;
+		struct msevi_chaninf *chaninf;
 		
 		printf( "Reading channel=%s\n", popts.chan[i] );
 		id = msevi_chan2id( popts.chan[i] );
@@ -275,7 +285,7 @@ int main (int argc, char **argv)
 			msevi_l15hdf_append_coverage( meta_gid, "coverage", &hrv_cov );
 		}
 		if(img==NULL) goto err_out;
-		msevi_l15hrit_annotate_image( img, header, trailer );
+		msevi_l15hrit_annotate_image( img, header, trailer, chaninf );
 
 		/* save image information to hdf */
 		r = msevi_l15hdf_write_image( img_gid, img );
@@ -286,20 +296,23 @@ int main (int argc, char **argv)
 
 		if( i==0 ) {
 			int l;
-			for( l=0; l<nlin; l++ ) {
+			for( l=0; l<reg->nlin; l++ ) {
 				line_acq_time[l].days = img->line_side_info[l].acquisition_time.days;
 				line_acq_time[l].msec = img->line_side_info[l].acquisition_time.msec;
 			}
-			write_cds_time( meta_gid, "line_mean_acquisition_time", nlin, line_acq_time );
+			write_cds_time( meta_gid, "line_mean_acquisition_time", reg->nlin, line_acq_time );
 		}
 
-		msevi_get_chaninf( img->spacecraft_id, img->channel_id, &chaninf );
-		chaninf.cal_slope  = img->cal_slope;
-		chaninf.cal_offset = img->cal_offset;
+		chaninf = msevi_get_chaninf( satinf, id );
+		satinf->chaninf[i].cal_slope = img->cal_slope;
+		satinf->chaninf[i].cal_offset = img->cal_offset;
+		printf("name=%s id=%d\n", satinf->chaninf[i].name, satinf->chaninf[i].id);
+		printf("cal_slope=%f cal_offset=%f\n", satinf->chaninf[i].cal_slope, satinf->chaninf[i].cal_offset);
+		printf("lambda_c=%f\n", satinf->chaninf[i].lambda_c);
 		if(i==0) {
-			msevi_l15hdf_create_chaninf( meta_gid, "channel_info", &chaninf );
+			msevi_l15hdf_create_chaninf( meta_gid, "channel_info", chaninf );
 		} else {
-			msevi_l15hdf_append_chaninf( meta_gid, "channel_info", &chaninf );
+			msevi_l15hdf_append_chaninf( meta_gid, "channel_info", chaninf );
 		}
 		msevi_l15_image_free( img );
 	}
@@ -317,21 +330,22 @@ int main (int argc, char **argv)
 	dy = -DEG2RAD((double)65536/lfac);
 	gp = geos_init( x0, y0, dx, dy );
 
-	lat = calloc(nlin*ncol, sizeof(float));
-	lon = calloc(nlin*ncol, sizeof(float));
+	npix = reg->nlin*reg->ncol;
+	lat = calloc(npix, sizeof(float));
+	lon = calloc(npix, sizeof(float));
 	if( lat==NULL || lon==NULL ) goto err_out;
 
-	muS = calloc(nlin*ncol, sizeof(float));
-	azS = calloc(nlin*ncol, sizeof(float));
+	muS = calloc(npix, sizeof(float));
+	azS = calloc(npix, sizeof(float));
 	if( muS==NULL || azS==NULL ) goto err_out;
 
-	mu0 = calloc(nlin*ncol, sizeof(float));
-	az0 = calloc(nlin*ncol, sizeof(float));
+	mu0 = calloc(npix, sizeof(float));
+	az0 = calloc(npix, sizeof(float));
 	if( mu0==NULL || az0==NULL ) goto err_out;
 	
 	/* calculate geolocation and satellite/sun angles */
-	geos_latlon2d( gp, proj_ss_lon, nlin, ncol, lat, lon );
-	dim[0] = nlin; dim[1] = ncol;
+	geos_latlon2d( gp, proj_ss_lon, reg->nlin, reg->ncol, lat, lon );
+	dim[0] = reg->nlin; dim[1] = reg->ncol;
 
 	if( popts.write_geolocation ) {
 		r = H5UTmake_dataset( geom_gid, "latitude", 2, dim, H5T_NATIVE_FLOAT, lat, 6 );
@@ -348,9 +362,9 @@ int main (int argc, char **argv)
 		uint16_t *cnt_zen = (uint16_t *)((void *)muS);
 		uint16_t *cnt_azi = (uint16_t *)((void *)azS);
 
-		geos_satpos2d( gp, true_ss_lon, nlin, ncol, lat, lon, muS, azS );
-		for(i=0;i<ncol*nlin;i++) cnt_zen[i] = (uint16_t) round(RAD2DEG(acosf(muS[i]))*100.0);
-		for(i=0;i<ncol*nlin;i++) cnt_azi[i] = (uint16_t) round(azS[i]*100.0);
+		geos_satpos2d( gp, true_ss_lon, reg->nlin, reg->ncol, lat, lon, muS, azS );
+		for(i=0;i<npix;i++) cnt_zen[i] = (uint16_t) round(RAD2DEG(acosf(muS[i]))*100.0);
+		for(i=0;i<npix;i++) cnt_azi[i] = (uint16_t) round(azS[i]*100.0);
 
 		r = H5UTmake_dataset( geom_gid, "satellite_zenith", 2, dim, H5T_NATIVE_UINT16, cnt_zen, 6 );
 		if(r<0) goto err_out;
@@ -370,9 +384,9 @@ int main (int argc, char **argv)
 		uint16_t *cnt_azi = (uint16_t *)((void *)azS);
 
 		jd = (double)(line_acq_time[0].days-15340)-0.5 + line_acq_time[0].msec/8.64e+07;
-		sunpos2d( jd, dt, nlin, ncol, lat, lon, mu0, az0 );
-		for(i=0;i<ncol*nlin;i++) cnt_zen[i] = (uint16_t) roundf(RAD2DEG(acosf(mu0[i]))*100.0);
-		for(i=0;i<ncol*nlin;i++) cnt_azi[i] = (uint16_t) roundf(az0[i]*100.0);
+		sunpos2d( jd, dt, reg->nlin, reg->ncol, lat, lon, mu0, az0 );
+		for(i=0;i<npix;i++) cnt_zen[i] = (uint16_t) roundf(RAD2DEG(acosf(mu0[i]))*100.0);
+		for(i=0;i<npix;i++) cnt_azi[i] = (uint16_t) roundf(az0[i]*100.0);
 
 		r = H5UTmake_dataset( geom_gid, "sun_zenith", 2, dim, H5T_NATIVE_UINT16, cnt_zen, 6 );
 		if(r<0) goto err_out;
@@ -402,7 +416,8 @@ int main (int argc, char **argv)
 	msevi_l15hrit_free_flist( flist );
 	free(header);
 	free(trailer);
-	free( line_acq_time );
+	free(line_acq_time);
+	free(satinf);
 
 	return  0;
 

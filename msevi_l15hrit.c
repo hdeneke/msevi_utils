@@ -775,7 +775,8 @@ int msevi_l15_fprintf_trailer( FILE *f, struct msevi_l15_trailer *tr )
 
 int msevi_l15hrit_annotate_image( struct msevi_l15_image   *img,
 				  struct msevi_l15_header  *hdr,
-				  struct msevi_l15_trailer *tra )
+				  struct msevi_l15_trailer *tra,
+				  struct msevi_chaninf *chaninf )
 {
 	/* set slope/offset */
 	img->cal_slope  = hdr->radiometric_processing.l15_image_calibration[img->channel_id-1].cal_slope;

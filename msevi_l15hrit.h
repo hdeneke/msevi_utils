@@ -39,7 +39,8 @@ struct msevi_l15_header  *msevi_l15hrit_read_prologue( char *file );
 struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file );
 int msevi_l15hrit_annotate_image( struct msevi_l15_image   *img,
 				  struct msevi_l15_header  *hdr,
-				  struct msevi_l15_trailer *tra	);
+				  struct msevi_l15_trailer *tra,
+				  struct msevi_chaninf     *chaninf);
 
 int msevi_l15_fprintf_header( FILE *f, struct msevi_l15_header *hdr );
 int msevi_l15_fprintf_trailer( FILE *f, struct msevi_l15_trailer *tr );

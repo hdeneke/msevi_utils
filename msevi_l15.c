@@ -5,11 +5,12 @@
 #include <math.h>
 
 /* Local includes */
+#include "parson.h"
 #include "cds_time.h"
 #include "msevi_l15.h"
 
 /* SEVIRI channel names */
-const static char *msevi_chan[12] = { 
+const static char *msevi_chan[12] = {
 	"vis006", "vis008", "ir_016", "ir_039", "wv_062", "wv_073",
 	"ir_087", "ir_097", "ir_108", "ir_120", "ir_134", "hrv"
 };
@@ -18,11 +19,10 @@ const int msevi_chan2id( const char *chan )
 {
 	int i;
 	for( i=0; i<12; i++ ){
-		if( strncasecmp(msevi_chan[i],chan,strlen(msevi_chan[i]))==0 ) 
+		if( strncasecmp(msevi_chan[i],chan,strlen(msevi_chan[i]))==0 )
 			return i+1;
 	}
 	return -1;
-
 }
 
 const char *msevi_id2chan( int id )
@@ -51,7 +51,7 @@ struct msevi_l15_image *msevi_l15_image_alloc( int nlin, int ncol )
 	img->nlin = nlin;
 	img->ncol = ncol;
 	img->counts = calloc( 2, nlin*ncol );
-	img->line_side_info = calloc( nlin, 
+	img->line_side_info = calloc( nlin,
 		       sizeof(struct msevi_l15_line_side_info) );
 
 	return img;
@@ -81,56 +81,14 @@ void msevi_l15_image_free( struct msevi_l15_image *img )
 	return;
 }
 
-int msevi_get_chaninf( int sat_id, int chan_id, struct msevi_chaninf *ci )
+struct msevi_chaninf *msevi_get_chaninf( struct msevi_satinf *satinf, int chan_id )
 {
-	
-	double f0_msg1[] = { 65.2296, 73.0127, 62.3715, 15.4566, 0.0, 0.0, 
-			     0.0, 0.0, 0.0, 0.0, 0.0, 78.8952 };
-	double f0_msg2[] = { 65.2065, 73.1869, 61.9923, 15.4566, 0.0, 0.0, 
-			     0.0, 0.0, 0.0, 0.0, 0.0, 79.0113 };
-	double nu_msg1[] = { 0.0000, 0.0000, 0.0000, 2567.33, 1598.103, 1362.081, 
-			     1149.069, 1034.343, 930.647, 839.660, 752.387, 0.0000 };
-	double nu_msg2[] = { 0.0000, 0.0000, 0.0000, 2568.832, 1600.548, 1360.330, 
-			     1148.620, 1035.289, 931.700, 836.445, 751.792, 0.0000 };
-
-	double alpha_msg1[] = { 0.0000, 0.0000, 0.0000, 0.9956, 0.9962, 0.9991,
-				0.9996, 0.9999, 0.9983, 0.9988, 0.9981, 0.0000 };
-	double beta_msg1[] = { 0.000, 0.000, 0.000, 3.410, 2.218, 0.478, 
-			       0.179, 0.060, 0.625, 0.397, 0.578, 0.000 };
-	double alpha_msg2[] = { 0.0000, 0.0000, 0.0000, 0.9954, 0.9963, 0.9991,
-				0.9996, 0.9999, 0.9983, 0.9988, 0.9981, 0.0000 };
-	double beta_msg2[] = { 0.000, 0.000, 0.000, 3.438, 2.185, 0.470, 
-			       0.179, 0.056, 0.640, 0.408, 0.561, 0.000 };
-	double *f0, *nu, *alpha, *beta;
-
-	if(sat_id==321) {          /* MSG1/Meteosat8 */
-		f0 = f0_msg1;
-		nu = nu_msg1;
-		alpha = alpha_msg1;
-		beta = beta_msg1;
-	} else if( sat_id==322 ) { /* MSG2/Meteosat9 */
-		f0 = f0_msg2;
-		nu = nu_msg2;
-		alpha = alpha_msg2;
-		beta = beta_msg2;
-	} else {
-		goto err_out;
-	}
-	if( chan_id<1 || chan_id>12 ) goto err_out;
-
-	memset( ci->name, 0, 8 );
-	strcpy( ci->name, msevi_id2chan(chan_id) );
-	ci->id = chan_id;
-
-	ci->f0     = f0[chan_id-1];
-	ci->nu_c   = nu[chan_id-1];
-	ci->alpha  = alpha[chan_id-1];
-	ci->beta   = beta[chan_id-1];
-
-	return 0;
-err_out:
-	return -1;
-
+	int i;
+        for( i=0; i<MSEVI_NR_CHAN; i++ ) {
+                if( satinf->chaninf[i].id == chan_id )
+                        return &(satinf->chaninf[i]);
+        }
+        return NULL;
 }
 
 
@@ -147,4 +105,149 @@ int msevi_l15_cnt2bt( struct msevi_chaninf *ci, int n, uint16_t *cnt, float *bt 
 		bt[i] = c2*nu / ( ci->alpha*log(1.0+nu*nu*nu*c1/rad) ) - ci->beta;
 	}
 	return 0;
+}
+
+static int json2chaninf(JSON_Object *chan_obj, struct msevi_chaninf *ci )
+{
+	int chan_id;
+	char *chan_nam;
+	const double vnan = nan("");
+
+	chan_id = (int) json_object_get_number(chan_obj, "id");
+	ci->id = chan_id;
+
+	chan_nam = (char *) json_object_get_string(chan_obj, "name");
+	strncpy(ci->name, chan_nam, 7);
+
+	ci->lambda_c = (float) json_object_get_number(chan_obj, "lambda_c");
+
+	/* solar channels */
+	if( (    chan_id>=MSEVI_CHAN_VIS006 && chan_id<=MSEVI_CHAN_IR_039)
+	      || chan_id==MSEVI_CHAN_HRV ) { /* solar */
+		ci->f0  = json_object_get_number(chan_obj, "f0");
+	} else {
+		ci->f0 = 0.0;
+	}
+
+	/* thermal channels */
+	if( chan_id>=MSEVI_CHAN_IR_039 && chan_id<=MSEVI_CHAN_IR_134 ) {
+		ci->nu_c  = json_object_get_number(chan_obj, "nu_c");
+		ci->alpha = json_object_get_number(chan_obj, "alpha");
+		ci->beta  = json_object_get_number(chan_obj, "beta");
+	} else {
+		ci->alpha = vnan;
+		ci->beta  = vnan;
+	}
+
+	return 0;
+}
+
+struct msevi_satinf *msevi_read_satinf( char *file, int sat_id )
+{
+	struct msevi_satinf *satinf = NULL;
+        JSON_Value   *root_val;
+        JSON_Object  *root_obj, *sat_obj, *chan_obj;
+	JSON_Array   *sat_arr, *chan_arr;
+	size_t i,j,n,m;
+
+       /* open json file, get root object */
+        root_val = json_parse_file( file );
+	if(root_val==NULL) goto err_out;
+
+	root_obj = json_value_get_object(root_val);
+        if(root_obj==NULL) goto err_out;
+
+	/* get satellite array */
+	sat_arr = json_object_get_array(root_obj, "satellites" );
+        if(sat_arr==NULL) goto err_out;
+
+	m = json_array_get_count(sat_arr);
+	for( j=0; j<m; j++ ) {
+		int id;
+
+		sat_obj = json_array_get_object(sat_arr, j);
+		id = (int)json_object_get_number(sat_obj, "id" );
+
+		if(id==sat_id) {
+			char *sat_nam;
+
+			satinf = calloc(1,sizeof(struct msevi_satinf));
+			if(satinf==NULL) goto err_out;
+
+			satinf->id = sat_id;
+
+			sat_nam = json_object_get_string(sat_obj, "name");
+			if(sat_nam==NULL) goto err_out;
+			strcpy(satinf->name, sat_nam);
+
+			sat_nam = json_object_get_string(sat_obj, "long_name");
+			if(sat_nam==NULL) goto err_out;
+			strcpy(satinf->long_name, sat_nam);
+
+			chan_arr = json_object_get_array(sat_obj, "channel" );
+			if(chan_arr==NULL) goto err_out;
+
+			n = json_array_get_count(chan_arr);
+			for( i=0; i<n; i++ ) {
+				/* get chan object */
+				chan_obj = json_array_get_object(chan_arr, i);
+				if(chan_obj==NULL) goto err_out;
+
+				json2chaninf(chan_obj, &satinf->chaninf[i]);
+			}
+		}
+	}
+
+err_out:
+	if(root_val) json_value_free(root_val);
+	return satinf;
+}
+
+struct msevi_region *msevi_read_region( char *file, char *svc, char *region )
+{
+
+	struct msevi_region *mreg = NULL;
+        JSON_Value   *root_val;
+        JSON_Object  *root_obj, *reg_obj;
+	JSON_Array   *reg_arr;
+	size_t i, n;
+
+       /* open json file, get root object */
+        root_val = json_parse_file( file );
+        if(root_val==NULL) goto err_out;
+
+	root_obj = json_value_get_object(root_val);
+        if(root_obj==NULL) goto err_out;
+
+	/* get region array for satellite service */
+	reg_arr = json_object_get_array(root_obj, svc);
+        if(reg_arr==NULL) goto err_out;
+
+	/* get array member with matching region name */
+        n = json_array_get_count(reg_arr);
+	for( i=0; i<n; i++ ) {
+		const char *reg_name;
+
+		/* get region object */
+                reg_obj = json_array_get_object(reg_arr, i);
+		if(reg_obj==NULL) goto err_out;
+
+		reg_name = json_object_get_string(reg_obj, "name");
+		if( strncmp(reg_name,region,16)==0 ) {
+
+			mreg = calloc(1,sizeof(struct msevi_region));
+			if(mreg==NULL) goto err_out;
+
+			strncpy(mreg->name, reg_name, 15);
+			mreg->lin0 = json_object_get_number(reg_obj, "lin0");
+			mreg->col0 = json_object_get_number(reg_obj, "col0");
+			mreg->nlin = json_object_get_number(reg_obj, "nlin");
+			mreg->ncol = json_object_get_number(reg_obj, "ncol");
+			break;
+		}
+	}
+
+err_out:
+	if(root_val) json_value_free(root_val);
+	return mreg;
 }
