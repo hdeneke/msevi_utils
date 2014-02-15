@@ -3,10 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <string.h> 
+#include <ctype.h>
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
-
+#include <time.h>
 #include <unistd.h>
 #include <getopt.h>
 
@@ -28,12 +29,13 @@
 #include "geos.h"
 #include "sunpos.h"
 
-struct prog_opts{
+struct prog_opts {
 	int    nchan;
 	char   *chan[12];
 	time_t time;
 	char   *dir;
 	char   *region;
+	char   *service;
 	struct msevi_l15_coverage coverage;
 	int    sunpos;
 	int    satpos;
@@ -48,6 +50,7 @@ struct prog_opts{
 	.time     = 0,
 	.dir      = ".",
 	.region   = "eu",
+	.service  = "pzs",
 	//.coverage = { "vis_ir", 2957, 3556, 1557, 2356}, /* RSS */
 	.coverage = { "vis_ir", 2957, 3556, 1357, 2156}, /* HRS */
 	.sunpos   = 0,
@@ -67,6 +70,7 @@ static void print_usage (char *prog_name)
 		 "\t-S, --sun\t\tadd sun angles\n"
 		 "\t-V, --view\t\tadd satellite viewing angles\n"
 		 "\t-r, --region\t\tspecify region\n"
+		 "\t-s, --service\t\tspecify satellite service (pzs or rss)\n"
 		 "\t-t TIME, --time=TIME\ttime of SEVIRI scan\n", prog_name );
 	return;
 }
@@ -74,15 +78,16 @@ static void print_usage (char *prog_name)
 static int parse_args (int argc, char **argv)
 {
 	int  optidx = 1, r=-1;
-	char optstr[] = "hSVc:d:r:t:";
+	char optstr[] = "hSVc:d:r:s:t:";
 	char c;
 
 	const struct option pargs [] = {
-                 { .name = "help",   .has_arg = 0, .flag = NULL, .val = 'h'},
-                 { .name = "chan",   .has_arg = 1, .flag = NULL, .val = 'c'},
-                 { .name = "dir",    .has_arg = 1, .flag = NULL, .val = 'd'},
-                 { .name = "time",   .has_arg = 1, .flag = NULL, .val = 't'},
-                 { .name = "region", .has_arg = 1, .flag = NULL, .val = 'r'},
+                 { .name = "help",    .has_arg = 0, .flag = NULL, .val = 'h'},
+                 { .name = "chan",    .has_arg = 1, .flag = NULL, .val = 'c'},
+                 { .name = "dir",     .has_arg = 1, .flag = NULL, .val = 'd'},
+                 { .name = "time",    .has_arg = 1, .flag = NULL, .val = 't'},
+                 { .name = "region",  .has_arg = 1, .flag = NULL, .val = 'r'},
+                 { .name = "service", .has_arg = 1, .flag = NULL, .val = 's'},
 	};
 	
 	while (1) {
@@ -105,7 +110,11 @@ static int parse_args (int argc, char **argv)
 			popts.region = optarg;
 			break;
 		case 't':
-			r = parse_utc_timestr( optarg, "%Y%m%d%H%M", &popts.time);
+                        optarg[8] = toupper(optarg[8]); /* allow lowercase t */
+                        r = parse_utc_timestr( optarg, "%Y%m%dT%H%M", &popts.time);
+			break;
+		case 's':
+ 			popts.service = optarg;
 			break;
 		case 'd':
 			popts.dir = optarg;
@@ -167,7 +176,6 @@ int main (int argc, char **argv)
 	int i, r, npix, sat_id;
 	char *fnam_hdf = NULL;
 	struct msevi_l15hrit_flist *flist;
-	char *svc;
 	double x0, y0, dx, dy;
 	const int coff=1856, cfac=13642337, loff=1856, lfac=13642337;
 
@@ -196,7 +204,7 @@ int main (int argc, char **argv)
 	}
 
 	/* get filenames  */
-	flist = msevi_l15hrit_get_flist( popts.dir, &popts.time );
+	flist = msevi_l15hrit_get_flist( popts.dir, &popts.time, popts.service );
 	if( (flist->prologue==NULL) | (flist->epilogue==NULL) ) {
 		fprintf( stderr, "Unable to find pro/epilogue files\n" );
 		goto err_out;
@@ -212,12 +220,6 @@ int main (int argc, char **argv)
 		goto err_out;
 	}
 
-	if( strstr(flist->prologue,"RSS") ) {
-		svc = "rss";
-	} else {
-		svc = "pzs";
-	}
-
 	/* init misc. parameters */
 	sat_id = header->satellite_status.satellite_definition.satellite_id;
 
@@ -227,10 +229,10 @@ int main (int argc, char **argv)
 		printf("Unable to read satellite info\n" );
 		return -1;
 	}
-	reg = msevi_read_region( "msevi_region.json", svc, popts.region );
+	reg = msevi_read_region( "msevi_region.json", popts.service, popts.region );
 	if( reg==NULL ) {
-		printf("ERROR: region=%s svc=%s\n", popts.region, svc);
-		printf("Unable to find region\n" );
+		printf("ERROR: region=%s svc=%s\n", popts.region, popts.service);
+		printf("Unable to find region\n");
 		return -1;
 	}
 
@@ -243,9 +245,9 @@ int main (int argc, char **argv)
 
 	/* Create file ... */
 	fnam_hdf = calloc( strlen(popts.dir)+256, 1 );
-	timestr = get_utc_timestr( "%Y%m%d%tH%Mz", popts.time );
+	timestr = get_utc_timestr( "%Y%m%dt%H%Mz", popts.time );
 	sprintf( fnam_hdf, "%s/%s-sevi-%s-l15hdf-%s-%s.c2.h5", popts.dir, satinf->name, timestr,
-		 svc, popts.region );
+		 popts.service, popts.region );
 	printf( "Creating: %s\n", fnam_hdf );
 	free(timestr);
 
@@ -285,6 +287,7 @@ int main (int argc, char **argv)
 			msevi_l15hdf_append_coverage( meta_gid, "coverage", &hrv_cov );
 		}
 		if(img==NULL) goto err_out;
+		chaninf = msevi_get_chaninf( satinf, id );
 		msevi_l15hrit_annotate_image( img, header, trailer, chaninf );
 
 		/* save image information to hdf */
@@ -303,7 +306,6 @@ int main (int argc, char **argv)
 			write_cds_time( meta_gid, "line_mean_acquisition_time", reg->nlin, line_acq_time );
 		}
 
-		chaninf = msevi_get_chaninf( satinf, id );
 		satinf->chaninf[i].cal_slope = img->cal_slope;
 		satinf->chaninf[i].cal_offset = img->cal_offset;
 		printf("name=%s id=%d\n", satinf->chaninf[i].name, satinf->chaninf[i].id);

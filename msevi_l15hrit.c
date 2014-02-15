@@ -79,7 +79,7 @@ const static size_t trailer_rec_off[8] = {
  *
  * \return     the list of SEVIRI L15 image files
  */
-struct msevi_l15hrit_flist *msevi_l15hrit_get_flist( char *dir, time_t *time )
+struct msevi_l15hrit_flist *msevi_l15hrit_get_flist( char *dir, time_t *time, char *svc )
 {
 	int i, r;
 	int ichan, iseg;
@@ -94,8 +94,14 @@ struct msevi_l15hrit_flist *msevi_l15hrit_get_flist( char *dir, time_t *time )
 
 	/* match SEVIRI HRIT files */
 	snprint_utc_timestr( timestr, 16, "%Y%m%d%H%M", *time );
-	snprintf( pattern, 512, "%s/H-000-MSG*%s*", dir, timestr );
-
+	if (0==strncasecmp(svc,"pzs",3)) {
+		snprintf( pattern, 512, "%s/H-000-MSG*%s*", dir, timestr );
+	}else if (0==strncasecmp(svc,"rss",3)) {
+		snprintf( pattern, 512, "%s/H-000-MSG*RSS*%s*", dir, timestr );
+	} else {
+		printf("ERROR: unknown service %s\nExiting\n", svc);
+		exit(-1);
+	}
 	globbuf.gl_offs = 0;
 	r = glob( pattern, 0, NULL, &globbuf );
 

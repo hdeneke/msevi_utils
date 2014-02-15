@@ -31,7 +31,7 @@ struct msevi_hrec_segment_line_quality {
 	struct msevi_l15_line_side_info *line_side_info;
 };
 
-struct msevi_l15hrit_flist* msevi_l15hrit_get_flist(char *dir, time_t *time );
+struct msevi_l15hrit_flist* msevi_l15hrit_get_flist(char *dir, time_t *time, char *svc);
 void   msevi_l15hrit_free_flist( struct msevi_l15hrit_flist *fl );
 
 struct msevi_l15_image *msevi_l15hrit_read_image( int nfile, char **files, struct msevi_l15_coverage *cov );
