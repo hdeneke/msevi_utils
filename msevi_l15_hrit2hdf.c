@@ -243,8 +243,8 @@ int main (int argc, char **argv)
 
 	/* Create file ... */
 	fnam_hdf = calloc( strlen(popts.dir)+256, 1 );
-	timestr = get_utc_timestr( "%Y%m%d%H%M", popts.time );
-	sprintf( fnam_hdf, "%s/%s-sevi-%s-l15-%s-%s.h5", popts.dir, satinf->name, timestr,
+	timestr = get_utc_timestr( "%Y%m%d%tH%Mz", popts.time );
+	sprintf( fnam_hdf, "%s/%s-sevi-%s-l15hdf-%s-%s.c2.h5", popts.dir, satinf->name, timestr,
 		 svc, popts.region );
 	printf( "Creating: %s\n", fnam_hdf );
 	free(timestr);
