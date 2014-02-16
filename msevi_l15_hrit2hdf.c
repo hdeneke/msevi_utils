@@ -17,8 +17,8 @@
 /* local includes */
 #include "mathutils.h"
 #include "timeutils.h"
+#include "fileutils.h"
 #include "h5utils.h"
-#include "timeutils.h"
 #include "cgms_xrit.h"
 #include "cds_time.h"
 #include "msevi_l15.h"
@@ -168,6 +168,24 @@ static void coverage_visir2hrv( struct msevi_l15_coverage *vi,struct msevi_l15_c
 	return;
 }
 
+static char *find_config_file(char *fnam )
+{
+	char *cfile, *env=NULL, *curdir="./";
+	int n;
+
+	env = getenv("MSEVI_ANC_DIR");
+	n = strlen(fnam)+strlen(env)+2;
+	cfile = calloc(1,n);
+	strncpy(cfile,env,n);
+	strncat(cfile,"/",n);
+	strncat(cfile,fnam,n);
+	if(file_exists(cfile)) {
+		return cfile;
+	}
+	free(cfile);
+	return NULL;
+}
+
 int main (int argc, char **argv)
 {
 	hid_t fid;
@@ -198,6 +216,7 @@ int main (int argc, char **argv)
 	// StratoCu: reg_str = "354x37+1502+2380";
 	struct geos_param *gp;
 	double proj_ss_lon = 0.0, true_ss_lon = 0.0;
+	char *satinf_file=NULL, *reg_file=NULL;
 
 	/* parse command line arguments */
 	if (parse_args (argc, argv) <0) {
@@ -225,18 +244,35 @@ int main (int argc, char **argv)
 	/* init misc. parameters */
 	sat_id = header->satellite_status.satellite_definition.satellite_id;
 
-	satinf = msevi_read_satinf( "msevi_satinf.json", sat_id );
+	/* Read satellite information from config file */
+	satinf_file = find_config_file( "msevi_satinf.json" );
+	if( satinf_file==NULL ) {
+		printf("ERROR: Unable to find config file: msevi_satinf.json\n" );
+		printf("Set env. variable MSEVI_ANC_DIR to point to its directory\n" );
+		return -1;
+	}	
+	satinf = msevi_read_satinf( satinf_file, sat_id );
 	if( satinf==NULL ) {
 		printf("ERROR: sat_id=%d\n", sat_id );
 		printf("Unable to read satellite info\n" );
 		return -1;
 	}
-	reg = msevi_read_region( "msevi_region.json", popts.service, popts.region );
+	free(satinf_file);
+
+	/* Read region information from config file */
+	reg_file = find_config_file( "msevi_region.json" );
+	if( reg_file==NULL ) {
+		printf("ERROR: Unable to find config file: msevi_region.json\n" );
+		printf("Set env. variable MSEVI_ANC_DIR to point to its directory\n" );
+		return -1;
+	}	
+	reg = msevi_read_region( reg_file, popts.service, popts.region );
 	if( reg==NULL ) {
 		printf("ERROR: region=%s svc=%s\n", popts.region, popts.service);
 		printf("Unable to find region\n");
 		return -1;
 	}
+	free(reg_file);
 
 	popts.coverage.northern_line  = 3712-reg->lin0;
 	popts.coverage.southern_line  = 3712-(reg->lin0+reg->nlin-1);
@@ -341,8 +377,6 @@ int main (int argc, char **argv)
 		}
 		msevi_l15_image_free( img );
 	}
-
-
 
 	/* add geometry */
 	true_ss_lon = header->satellite_status.satellite_definition.nominal_longitude;
