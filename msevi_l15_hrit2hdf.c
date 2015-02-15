@@ -299,7 +299,7 @@ int main (int argc, char **argv)
 	if(fid<0) goto err_out;
 
 	/* add various attributes */
-	r = H5LTset_attribute_string(fid, "/", "version", "2.0.0" );
+	r = H5LTset_attribute_string(fid, "/", "version", "2.0.1" );
 	r = H5LTset_attribute_ushort(fid, "/", "satellite_id", &sat_id, 1);
 	now = time(NULL);
 	gethostname(host, 32);
