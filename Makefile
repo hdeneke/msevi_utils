@@ -8,7 +8,7 @@ EUM_WAVELET_INC  = $(EUM_WAVELET_DIR)/CAPI/
 
 # C Compiler settings
 CC		= gcc
-CFLAGS		= -I$(EUM_WAVELET_INC) -Wall -std=gnu99 -O3 -g
+CFLAGS		= -I$(EUM_WAVELET_INC) -Wall -std=gnu99 -O3 -g -fPIC
 
 # Linker
 LD	        = g++

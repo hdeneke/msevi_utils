@@ -213,15 +213,19 @@ struct msevi_region *msevi_read_region( char *file, char *svc, char *region )
 	size_t i, n;
 
        /* open json file, get root object */
+	printf("Open file\n");
         root_val = json_parse_file( file );
         if(root_val==NULL) goto err_out;
+	printf("Parse file\n");
 
 	root_obj = json_value_get_object(root_val);
         if(root_obj==NULL) goto err_out;
+	printf("Got root\n");
 
 	/* get region array for satellite service */
 	reg_arr = json_object_get_array(root_obj, svc);
         if(reg_arr==NULL) goto err_out;
+	printf("Service: %s\n",svc);
 
 	/* get array member with matching region name */
         n = json_array_get_count(reg_arr);

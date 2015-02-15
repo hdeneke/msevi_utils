@@ -174,11 +174,17 @@ static char *find_config_file(char *fnam )
 	int n;
 
 	env = getenv("MSEVI_ANC_DIR");
-	n = strlen(fnam)+strlen(env)+2;
-	cfile = calloc(1,n);
-	strncpy(cfile,env,n);
-	strncat(cfile,"/",n);
-	strncat(cfile,fnam,n);
+	if (env!=NULL) {
+		n = strlen(fnam)+strlen(env)+2;
+		strncpy(cfile,env,n);
+		strncat(cfile,"/",n);
+		strncat(cfile,fnam,n);
+	} else {
+		n = strlen(fnam)+strlen(curdir)+2;
+		cfile = calloc(1,n);
+		strncpy(cfile,curdir,n);
+		strncat(cfile,fnam,n);
+	}
 	if(file_exists(cfile)) {
 		return cfile;
 	}

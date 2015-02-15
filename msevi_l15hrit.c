@@ -557,6 +557,7 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 			memcpy_be32toh( &cov->northern_line, rec_ptr+4, 1 );
 			memcpy_be32toh( &cov->eastern_column, rec_ptr+8, 1 );
 			memcpy_be32toh( &cov->western_column, rec_ptr+12, 1 );
+			printf("VISIR coverage: %d %d %d %d\n", cov->southern_line,cov->northern_line,cov->eastern_column,cov->western_column);
 
 			/* planned lower HRV coverage */
 			cov =  &header->image_description.planned_coverage_hrv_lower;
@@ -565,7 +566,7 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 			memcpy_be32toh( &cov->northern_line, rec_ptr+4, 1 );
 			memcpy_be32toh( &cov->eastern_column, rec_ptr+8, 1 );
 			memcpy_be32toh( &cov->western_column, rec_ptr+12, 1 );
-			
+
 			/* planned upper HRV coverage */
 			cov =  &header->image_description.planned_coverage_hrv_upper;
 			rec_ptr = data+header_rec_off[4]+71;
@@ -820,8 +821,9 @@ int msevi_l15hrit_annotate_image( struct msevi_l15_image   *img,
 	img->alpha     = chaninf->alpha;
 	img->beta      = chaninf->beta;
 	if (img->f0>0) {
-		jd = time_cds2jday( &hdr->image_acquisition.planned_acquisition_time.true_repeat_cycle_start, EPOCH_TAI );
+		jd = time_cds2jday( &hdr->image_acquisition.planned_acquisition_time.true_repeat_cycle_start, EPOCH_J2000_0 );
 		esd = sun_earth_distance(jd);
+		printf("jd=%f esd=%f\n",jd,esd);
 		img->refl_slope = img->cal_slope * M_PI * SQR(esd)/img->f0;
 		img->refl_offset = img->cal_offset * M_PI * SQR(esd)/img->f0;
 	} else {

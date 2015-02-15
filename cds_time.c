@@ -23,7 +23,7 @@ void time_unix2cds(time_t time, struct cds_time *ct)
 
 double time_cds2jday(struct cds_time *ct, double epoch)
 {
-	return(EPOCH_TAI+ct->days+(ct->msec/8.64e7));
+	return(EPOCH_TAI-epoch+ct->days+(ct->msec/8.64e7));
 }
 
 double difftime_cds(struct cds_time *t1, struct cds_time *t2)
