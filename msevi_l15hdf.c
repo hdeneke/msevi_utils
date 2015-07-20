@@ -1,7 +1,7 @@
 /* system includes */
 #include <stdio.h>
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <time.h>
 #include <math.h>
@@ -40,7 +40,7 @@ int msevi_l15hdf_write_image( hid_t gid, struct msevi_l15_image *img )
 	r = H5LTset_attribute_double(gid, dset, "cal_offset", &img->cal_offset, 1);
 	r = H5LTset_attribute_ushort(gid, dset, "channel_id", &img->channel_id, 1);
 	r = H5LTset_attribute_string(gid, dset, "units",  "mWm-2sr-1(cm-1)-1" );
-	snprintf( long_name, 64, "toa_spectral_radiance_%s", 
+	snprintf( long_name, 64, "toa_spectral_radiance_%s",
 		  msevi_id2chan(img->channel_id) );
 	r = H5LTset_attribute_string(gid, dset, "long_name",  long_name );
 	r = H5LTset_attribute_double(gid, dset, "lambda_c", &img->lambda_c, 1);
@@ -60,7 +60,7 @@ int msevi_l15hdf_write_image( hid_t gid, struct msevi_l15_image *img )
 	r = H5LTset_attribute_string(gid, dset, "CLASS", "IMAGE" );
 	r = H5LTset_attribute_string(gid, dset, "IMAGE_SUBCLASS", "IMAGE_GRAYSCALE" );
 	r = H5LTset_attribute_string(gid, dset, "IMAGE_VERSION", "1.2" );
-	
+
 	return 0;
 
 err_out:
@@ -104,7 +104,7 @@ struct msevi_l15_image *msevi_l15hdf_read_image( hid_t fid, int chan_id )
 
 err_out:
 	return NULL;
-}	
+}
 
 /* line side info */
 const static size_t lsi_size = sizeof( struct msevi_l15_line_side_info );
@@ -167,7 +167,7 @@ const static size_t cov_offsets[5]   = {
 	offsetof(struct msevi_l15_coverage, southern_line),
 	offsetof(struct msevi_l15_coverage, northern_line),
 	offsetof(struct msevi_l15_coverage, eastern_column),
-	offsetof(struct msevi_l15_coverage, western_column) 
+	offsetof(struct msevi_l15_coverage, western_column)
 };
 const static size_t cov_membsize[5]  = { 8, sizeof(uint32_t), sizeof(uint32_t), sizeof(uint32_t), sizeof(uint32_t) };
 const char *cov_names[5] = { "channel", "southern_line", "northern_line", "eastern_column", "western_column" };
@@ -176,7 +176,7 @@ const char *cov_names[5] = { "channel", "southern_line", "northern_line", "easte
 int msevi_l15hdf_write_coverage( hid_t hid, char *name, struct msevi_l15_coverage *cov )
 {
 	int r;
-	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, 
+	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32,
 			       H5T_NATIVE_UINT32 };
 	hid_t strtype;
 
@@ -192,7 +192,7 @@ int msevi_l15hdf_write_coverage( hid_t hid, char *name, struct msevi_l15_coverag
 int msevi_l15hdf_append_coverage( hid_t hid, char *name, struct msevi_l15_coverage *cov )
 {
 	int r;
-	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, 
+	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32,
 			       H5T_NATIVE_UINT32 };
 	hid_t strtype;
 
@@ -207,7 +207,7 @@ int msevi_l15hdf_append_coverage( hid_t hid, char *name, struct msevi_l15_covera
 int msevi_l15hdf_read_coverage( hid_t gid, char *name, struct msevi_l15_coverage *cov )
 {
 	int r;
-	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, 
+	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32,
 			       H5T_NATIVE_UINT32 };
 	hid_t strtype;
 
@@ -232,13 +232,13 @@ const static size_t chaninf_offsets[11]   = {
 	offsetof(struct msevi_chaninf, refl_slope),
 	offsetof(struct msevi_chaninf, refl_offset),
 	offsetof(struct msevi_chaninf, nu_c),
-	offsetof(struct msevi_chaninf, alpha), 
-	offsetof(struct msevi_chaninf, beta) 
+	offsetof(struct msevi_chaninf, alpha),
+	offsetof(struct msevi_chaninf, beta)
 };
-const static size_t chaninf_membsize[11]  = { 8, sizeof(uint16_t), sizeof(double), sizeof(double), 
-					     sizeof(double), sizeof(double), sizeof(double), sizeof(double), 
+const static size_t chaninf_membsize[11]  = { 8, sizeof(uint16_t), sizeof(double), sizeof(double),
+					     sizeof(double), sizeof(double), sizeof(double), sizeof(double),
 					     sizeof(double), sizeof(double), sizeof(double) };
-const char *chaninf_names[11] = { "name", "id", "cal_slope", "cal_offset", "lambda_c", "f0", "refl_slope", "refl_offset", 
+const char *chaninf_names[11] = { "name", "id", "cal_slope", "cal_offset", "lambda_c", "f0", "refl_slope", "refl_offset",
 				 "nu_c", "alpha", "beta" };
 
 int msevi_l15hdf_create_chaninf( hid_t hid, char *name, struct msevi_chaninf *ci )
@@ -263,7 +263,7 @@ int msevi_l15hdf_append_chaninf( hid_t hid, char *name, struct msevi_chaninf *ci
 {
 	int r;
 	hid_t chaninf_types[11] = { 0, H5T_NATIVE_UINT16, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE,
-				    H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, 
+				    H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE,
 				    H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE, H5T_NATIVE_DOUBLE };
 	hid_t strtype;
 

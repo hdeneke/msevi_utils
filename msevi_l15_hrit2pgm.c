@@ -1,8 +1,8 @@
 /* system includes */
 #define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
@@ -82,7 +82,7 @@ static int parse_args (int argc, char **argv)
                  { .name = "time",   .has_arg = 1, .flag = NULL, .val = 't'},
                  { .name = "region", .has_arg = 1, .flag = NULL, .val = 'r'},
 	};
-	
+
 	while (1) {
 		c = getopt_long (argc, argv, optstr, pargs, &optidx);
 
@@ -117,7 +117,7 @@ int write_pgm(char *fnam, int nlin, int ncol, uint16_t *data, char *comment )
 	FILE *fp;
 	int i;
 	uint16_t val;
-	
+
 	fp = fopen(fnam, "w" );
 	if( comment==NULL ) {
 		fprintf( fp, "P5\n%d %d\n1023\n", ncol, nlin );
@@ -203,7 +203,7 @@ int main (int argc, char **argv)
 	/* ... read channels and add images to HDF file */
 	for( i=0; i<popts.nchan; i++ ) {
 		int id;
-		
+
 		/* Create file ... */
 		fnam_pgm = calloc( strlen(popts.dir)+256, 1 );
 		timestr = get_utc_timestr( "%Y%m%d%H%M", popts.time );
@@ -233,7 +233,7 @@ int main (int argc, char **argv)
 err_out:
 	printf("Error\n");
 	return -1;
-	
+
 }
 
 

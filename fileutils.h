@@ -17,7 +17,7 @@ extern "C" {
 /***** MACRO definitions *****************************************************/
 
 /**
- * \def file_exists(fn) 
+ * \def file_exists(fn)
  * \brief checks whether a file with name fn exists
  */
 #define  file_exists(fn) (0==file_info(fn,NULL,NULL))

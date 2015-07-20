@@ -1,4 +1,4 @@
-/** 
+/**
  *  \file    geos.c
  *  \brief   geostationary satellite projection functions
  *
@@ -16,7 +16,7 @@
 #include "mathutils.h"
 #include "geos.h"
 
-static void calc_mu_azi( float lat1, float lat2, float dlon, 
+static void calc_mu_azi( float lat1, float lat2, float dlon,
 			 float *mu, float *azi )
 {
 
@@ -53,10 +53,10 @@ static void calc_mu_azi( float lat1, float lat2, float dlon,
 /**
  * \brief init context and parameter info for geostationary sat. projection
  *
- * \param[in]  x0 
- * \param[in]  y0 
- * \param[in]  dx 
- * \param[in]  dy 
+ * \param[in]  x0
+ * \param[in]  y0
+ * \param[in]  dx
+ * \param[in]  dy
  *
  * \author Hartwig Deneke
  */
@@ -112,7 +112,7 @@ int geos_latlon2d( struct geos_param *gp, float sslon,
 	float x, y, z, rxy, nan=nanf("");
 
 	for( l=0; l<nlin; l++ ) {
-		
+
 		/* calculate scan angle in vertical plane */
 		vsa = gp->y0+gp->dy*l;
 		sincosf(vsa, &sin_vsa, &cos_vsa);
@@ -124,7 +124,7 @@ int geos_latlon2d( struct geos_param *gp, float sslon,
 			hsa = gp->x0+gp->dx*c;
 			sincosf(hsa, &sin_hsa, &cos_hsa);
 
-			/* solve quad. equation for intersection with 
+			/* solve quad. equation for intersection with
 			   earth */
 			c1 = 1.0+(gp->c1-1.0)*SQR(sin_vsa);
 			p2 = cos_vsa*cos_hsa/c1;
@@ -136,12 +136,12 @@ int geos_latlon2d( struct geos_param *gp, float sslon,
 				continue;
 			}
 			gd = p2-sqrt(discr);
-			
+
 			/* calculate ECEF coordinates */
 			x = gp->h*(1.0-gd*cos_hsa*cos_vsa);
 			y = gp->h*gd*sin_hsa*cos_vsa;
 			z = gp->h*gd*sin_vsa;
-			
+
 			/* transform to geodetic coordinates */
 			rxy = hypot(x,y);
 			lat[i] = RAD2DEG(atan(gp->c1*z/rxy));
@@ -186,7 +186,7 @@ int geos_satpos2d( struct geos_param *gp, float sslon, int nlin, int ncol,
 				azS[i] = nan;
 				continue;
 			}
-			
+
 			/* calculate ECEF coordinates of satellite */
 			clat = atanf( gp->c3*tanf( DEG2RAD(lat[i]) ) );
 			sincosf(clat, &sin_clat, &cos_clat);
@@ -209,5 +209,5 @@ int geos_satpos2d( struct geos_param *gp, float sslon, int nlin, int ncol,
 				     muS+i, azS+i );
 		}
 	}
-	return 0;	
+	return 0;
 }

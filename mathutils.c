@@ -1,4 +1,4 @@
-/** 
+/**
  *  \file    mathutils.c
  *  \brief   Utility mathematical functions
  *
@@ -14,7 +14,7 @@
 
 
 /**
- * \brief  for an increasing array of floats, find the index of the member 
+ * \brief  for an increasing array of floats, find the index of the member
  *         less than a given value
  *
  * \param[in]  value    the value to find
@@ -28,7 +28,7 @@
  */
 int bracket (float value, float *array, const int nr, int *ilower, float *weight)
 {
-  
+
 	int i_lo = 0;
 	int i_hi = nr-1;
 
@@ -64,7 +64,7 @@ void get_min_max(float *v,const int nv, float *vmin,float *vmax)
 {
 	int i;
 	*vmin=*vmax=v[0];
-	for(i=1;i<nv;i++){  
+	for(i=1;i<nv;i++){
 		*vmin = (v[i]< *vmin) ? v[i] : *vmin;
 		*vmax = (v[i]> *vmax) ? v[i] : *vmax;
 	}
@@ -78,20 +78,20 @@ void get_min_max(float *v,const int nv, float *vmin,float *vmax)
  * \param[in]  ndim       the number of dimensions
  * \param[in]  ivec       index vector along each of the dimensions
  * \param[in]  wvec       weight vector along each of the dimensions
- * \param[in]  shift      the shift vector for the dimensions 
- * \param[out] ivec_exp   index vector of contributing points 
- * \param[out] wvec_exp   weight vector of contributing points 
+ * \param[in]  shift      the shift vector for the dimensions
+ * \param[out] ivec_exp   index vector of contributing points
+ * \param[out] wvec_exp   weight vector of contributing points
  *
  * \author Hartwig Deneke
  */
-void ndim_lin_interp_get_idx_wght(const int ndim, const int *ivec, 
-				  const float *wvec, const int *shift, 
+void ndim_lin_interp_get_idx_wght(const int ndim, const int *ivec,
+				  const float *wvec, const int *shift,
 				  int *ivec_exp, float *wvec_exp)
 {
 	int i,j,n;
 	int ishift;
 /* 	float wtest; */
-	
+
 	/* being clever to avoid recomputations */
 	wvec_exp[0]=1.0;
 	ivec_exp[0]=0;
@@ -102,7 +102,7 @@ void ndim_lin_interp_get_idx_wght(const int ndim, const int *ivec,
 		for(j=0; j < n; j++){
 			wvec_exp[j+n] = wvec_exp[j] * wvec[i];
 			wvec_exp[j] *= (1.0 - wvec[i]);
-			
+
 			ivec_exp[j] += ishift;
 			ivec_exp[j+n] = ivec_exp[j] + shift[i];
 		}
@@ -129,24 +129,24 @@ void ndim_lin_interp_get_idx_wght(const int ndim, const int *ivec,
 		}
 		//assert( ivec_exp[i] == ishift );
 		//assert( fabs(wvec_exp[i] -wtest)<  0.01 );
-		ivec_exp[i] = ishift; 
+		ivec_exp[i] = ishift;
 		wvec_exp[i] = wtest;
 	}
 	*/
-	
-	return;  
+
+	return;
 }
 
 
 int almost_equal(float A,float B, int maxUlps)
 {
-  /* compare two floating point values, 
+  /* compare two floating point values,
      code based on
      http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
-     maxUlps is the number of float values laying between 
+     maxUlps is the number of float values laying between
      A and B
   */
-  
+
   int aInt,bInt,intDiff;
 
   //assert(maxUlps > 0 && maxUlps < 4 * 1024 * 1024);
@@ -154,10 +154,10 @@ int almost_equal(float A,float B, int maxUlps)
   aInt = *(int*)(void *)&A;
   if (aInt < 0)
     aInt = 0x80000000 - aInt;
-  
+
   // Make bInt lexicographically ordered as a twos-complement int
 
-  bInt = *(int*)(void *)&B;  
+  bInt = *(int*)(void *)&B;
   if (bInt < 0)
     bInt = 0x80000000 - bInt;
 
@@ -165,9 +165,9 @@ int almost_equal(float A,float B, int maxUlps)
   if (intDiff <= maxUlps)
 
     return 1;
-  
+
   return 0;
-  
+
 }
 
 void enclosing_indices( int n, float *x, float xmin, float xmax,

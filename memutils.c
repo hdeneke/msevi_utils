@@ -1,4 +1,4 @@
-/** 
+/**
  *  \file    memutils.c
  *  \brief   Utility functions for memory handling
  *
@@ -12,7 +12,7 @@
 
 /**
  * \brief dereference a pointer n times
- *  
+ *
  * \param[in]  p   the pointer to dereference
  * \param[in]  n   the number of times to dereference the pointer
  *
@@ -31,13 +31,13 @@ void *deref_ptr(void *p, int n)
 
 /**
  * \brief allocate a 2D array
- * 
- * \param[in]  nx     the size of the first (fast-changing, right-most) dimension 
- * \param[in]  ny     the size of the last  (slow-changing, left-most) dimension 
+ *
+ * \param[in]  nx     the size of the first (fast-changing, right-most) dimension
+ * \param[in]  ny     the size of the last  (slow-changing, left-most) dimension
  * \param[in]  size   the size of the objects in the array
  *
  * \return pointer to the 2D array
- * 
+ *
  * \author Hartwig Deneke
  */
 void *calloc_2d (size_t nx, size_t ny, size_t size)
@@ -72,7 +72,7 @@ static void init_pointers (void **p1, size_t nmemb, void *p2, size_t shift)
 
 
 /**
- * \brief allocate an n-dimensional array 
+ * \brief allocate an n-dimensional array
  *
  * \param[in]  ndim    the number of dimensions
  * \param[in]  dim     an array with the size of the dimensions
@@ -95,12 +95,12 @@ void *calloc_ndim (size_t ndim, size_t *dim, size_t size)
         nr_obj = calloc (ndim+1, sizeof(size_t));
 
         /* calculate nr of pointers per level of dimension  */
-        *nr_obj = 1; 
+        *nr_obj = 1;
         nr_obj++;    /*  re-arrange so that nr_obj[-1] is 1 */
 
         for( i=0; i<ndim; i++ ){
 		/* calculate nr of objects per level of dimension */
-                nr_obj[i] = dim[i] * *(nr_obj+i-1); 
+                nr_obj[i] = dim[i] * *(nr_obj+i-1);
         }
 
         /* calculate size of memory for both pointers and data */
@@ -136,13 +136,13 @@ err_exit:
  *
  * \param[in]   n        the number of pointers in the array
  * \param[in]   ptr_arr  the  pointer to the array of pointers to free
- * 
+ *
  * \author Hartwig Deneke
  */
 void free_ptr_array(size_t n, void **ptr_arr)
 {
 	int i;
-	
+
 	if (ptr_arr) {
 		for (i=0; i<n; i++)
 			free (ptr_arr[i]);
@@ -173,9 +173,9 @@ void unpack_10bit_to_16bit (void *src, uint16_t *dest, size_t off, size_t cnt)
 	uint8_t *s=src;
 
 	for (i=0; i<cnt; i++){
-		/* remainder of div 4 is used as index to lookup tables 
+		/* remainder of div 4 is used as index to lookup tables
 		   for offset/mask/shift */
-		r = (off+i) % 4;              
+		r = (off+i) % 4;
 		soff = (off+i)/4*5+loff[r];
 		dest[i] = ((uint16_t)s[soff]<<8) + s[soff+1];
 		dest[i] &= lmask[r];

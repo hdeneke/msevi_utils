@@ -1,8 +1,8 @@
 /* system includes */
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <math.h>
 
@@ -59,7 +59,7 @@ int main (int argc, char **argv)
 	//if( lat==NULL || lon==NULL || muS==NULL || azS==NULL )
 	if( lat==NULL || lon==NULL )
 		goto err_out;
-	
+
 	/* calculate geolocation and save */
 #if 1
 	gc->proj_ss_lon = 9.5;
@@ -73,7 +73,7 @@ int main (int argc, char **argv)
 	//gid = H5Gcreate2( fid, "geolocation", 0, H5P_DEFAULT, H5P_DEFAULT );
 	//if(gid<0) goto err_out;
 	gid = fid;
-	
+
 	dim[0] = gc->nlin;
 	dim[1] = gc->ncol;
 	r = H5UTmake_dataset( gid, "latitude", 2, dim, H5T_NATIVE_FLOAT, lat, 6 );
@@ -93,7 +93,7 @@ int main (int argc, char **argv)
 	if(r<0) goto err_out;
 	r = H5UTmake_dataset( gid, "land_sea_mask", 2, dim, H5T_NATIVE_UINT8, buf, 6 );
 	if(r<0) goto err_out;
-	
+
 #if 0
 	geos_satpos( gc, lat, lon, muS, azS );
 
@@ -126,7 +126,7 @@ int main (int argc, char **argv)
 err_out:
 	printf("Error\n");
 	return -1;
-	
+
 }
 
 

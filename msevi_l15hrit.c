@@ -34,8 +34,8 @@ const static size_t header_rec_len[8] = {
 	 19786,  /* impf_configuration */
 };
 
-/* SEVIRI L15 header record offsets, i.e cumulative sums of 
-   record length 
+/* SEVIRI L15 header record offsets, i.e cumulative sums of
+   record length
    TODO: ???? check, version seems to be missing ???        */
 const static size_t header_rec_off[9] = {
 	     0, /* start, version */
@@ -45,12 +45,12 @@ const static size_t header_rec_off[9] = {
 	386892, /* image_description */
 	386993, /* radiometric_processing */
 	407808, /* geometric_processing */
-        425461, /* impf_configuration */ 
+        425461, /* impf_configuration */
         445247  /* end */
 };
 
 /* SEVIRI L15 trailer record lengths */
-const static size_t trailer_rec_len[7] = { 
+const static size_t trailer_rec_len[7] = {
 	     1, /* version */
 	   340, /* image_production_stats */
 	  5680, /* navigation_extraction */
@@ -59,9 +59,9 @@ const static size_t trailer_rec_len[7] = {
 	   132  /* timeliness_and_completeness */
 };
 
-/* SEVIRI L15 trailer record offsets i.e cumulative sums of 
+/* SEVIRI L15 trailer record offsets i.e cumulative sums of
    record length */
-const static size_t trailer_rec_off[8] = { 
+const static size_t trailer_rec_off[8] = {
 	     0, /* start, version */
 	     1, /* image_production_stats */
 	   341, /* navigation_extraction */
@@ -149,7 +149,7 @@ err_out:
 void msevi_l15hrit_free_flist( struct msevi_l15hrit_flist *fl )
 {
 	int ichan, iseg;
-	
+
 	if( fl ) {
 		free(fl->prologue);
 		free(fl->epilogue);
@@ -195,7 +195,7 @@ struct msevi_l15_image *msevi_l15hrit_read_segment( char *fnam )
 	/* allocate image */
 	img = calloc(1,sizeof(*img));
 	if(img==NULL) goto err_out;
-	
+
 	/* set image information */
 	img->nlin = img_struct->nlin;
 	img->ncol = img_struct->ncol;
@@ -264,9 +264,9 @@ static int map_segment(struct msevi_l15_image *dest, struct msevi_l15_image *src
 		/* calculate line offsets */
 		loff_dest = dest->coverage.northern_line-north_lin+il;
 		loff_src  = south_lin-src->coverage.southern_line+nlin-il-1;
-		
+
 		/* copy line side information */
-		memcpy( dest->line_side_info+loff_dest, src->line_side_info+loff_src, 
+		memcpy( dest->line_side_info+loff_dest, src->line_side_info+loff_src,
 		        sizeof(struct msevi_l15_line_side_info) );
 
 		/* get data pointers, add column offsets */
@@ -331,7 +331,7 @@ static int coverage_overlaps ( struct msevi_l15_coverage *c1,
 			       struct msevi_l15_coverage *c2 )
 {
 	if(     c1->southern_line  > c2->northern_line
-	     || c1->northern_line  < c2->southern_line 
+	     || c1->northern_line  < c2->southern_line
 	     || c1->eastern_column > c2->western_column
              || c1->western_column < c2->eastern_column )
 		return 0;
@@ -339,7 +339,7 @@ static int coverage_overlaps ( struct msevi_l15_coverage *c1,
 }
 
 
-struct msevi_l15_image *msevi_l15hrit_read_image( int nfile, char **files, 
+struct msevi_l15_image *msevi_l15hrit_read_image( int nfile, char **files,
 						  struct msevi_l15_coverage *cov )
 
 {
@@ -386,7 +386,7 @@ void *msevi_l15_hrit_decode_hrec( void *hrec )
 {
 	uint8_t  hrec_type;
 	uint16_t hrec_len;
-	
+
 	memcpy(&hrec_type, hrec, 1);
 	memcpy_be16toh(&hrec_len, hrec+1, 1);
 
@@ -396,7 +396,7 @@ void *msevi_l15_hrit_decode_hrec( void *hrec )
 
 		si = calloc(1,sizeof(*si));
 		if(si==NULL) goto err_out;
-		
+
 		si->hrec_type = hrec_type;
 		si->hrec_len  = hrec_len;
 		memcpy(&si->sat_id, hrec+3, 2);
@@ -438,7 +438,7 @@ err_out:
 
 struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 {
-	
+
 	int i,j;
 	struct msevi_l15_header *header;
 	struct xrit_file *pro;
@@ -461,7 +461,7 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 	// printf("Satellite status rec\n");
 	{  /* get satellite status record */
 		{ /* get satellite definition */
-			struct _satellite_definition *sd = 
+			struct _satellite_definition *sd =
 				&header->satellite_status.satellite_definition;
 			rec_ptr = data+header_rec_off[1];
 
@@ -476,7 +476,7 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 			memcpy_be32toh( &orb->period_start_time.msec,  rec_ptr+2, 1 );
 			memcpy_be16toh( &orb->period_end_time.days,    rec_ptr+6, 1 );
 			memcpy_be32toh( &orb->period_end_time.msec,    rec_ptr+8, 1 );
-			
+
 			rec_ptr = data+header_rec_off[1]+7+28+12;
 			for( i=0; i<100; i++ ){
 				memcpy_be16toh( &orb->orbitcoef[i].start_time.days,  rec_ptr, 1);
@@ -498,7 +498,7 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 
 	{ /* get image acquisition record */
 		{ /* planned acquisition time */
-			struct _planned_acquisition_time *pat = 
+			struct _planned_acquisition_time *pat =
 				&header->image_acquisition.planned_acquisition_time;
 
 			rec_ptr = data + header_rec_off[2];
@@ -509,22 +509,22 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 			memcpy_be16toh( &pat->planned_repeat_cylce_end.days,  rec_ptr+20, 1);
 			memcpy_be32toh( &pat->planned_repeat_cylce_end.msec, rec_ptr+22, 1);
 		}
-	}      
+	}
 
 	{ /* get image description record */
 		{  /* type of projection */
-			struct _projection_description *pd = 
+			struct _projection_description *pd =
 				&header->image_description.projection_description;
-		
+
 			rec_ptr = data+header_rec_off[4];
 			memcpy( &pd->type_of_projection, rec_ptr, 1 );
 			memcpy_be32toh( &pd->longitude_of_ssp, rec_ptr+1, 1);
 		} { /* reference grid */
-			
-			struct _reference_grid *rg = 
+
+			struct _reference_grid *rg =
 				&header->image_description.reference_grid_vis_ir;
 			rec_ptr = data+header_rec_off[4]+5;
-			
+
 			memcpy_be32toh( &rg->number_of_lines, rec_ptr, 1 );
 			memcpy_be32toh( &rg->number_of_columns, rec_ptr+4, 1 );
 			memcpy_be32toh( &rg->line_dir_grid_step, rec_ptr+8, 1 );
@@ -543,9 +543,9 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 			memcpy_be32toh( &rg->line_dir_grid_step, rec_ptr+8, 1 );
 			memcpy_be32toh( &rg->column_dir_grid_step, rec_ptr+12, 1 );
 			memcpy( &rg->grid_origin, rec_ptr+16, 1 );
-			/* printf("nlin=%d ncol=%d lstep=%f cstep=%f origin=%d\n", 
-			       rg->number_of_lines, rg->number_of_columns, 
-			       rg->line_dir_grid_step,  rg->column_dir_grid_step, 
+			/* printf("nlin=%d ncol=%d lstep=%f cstep=%f origin=%d\n",
+			       rg->number_of_lines, rg->number_of_columns,
+			       rg->line_dir_grid_step,  rg->column_dir_grid_step,
 			       rg->grid_origin ); */
 		} { /* planned coverage */
 			struct msevi_l15_coverage *cov;
@@ -645,7 +645,7 @@ struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file )
 	/* get version */
 	rec_ptr = data;
 	memcpy( &trailer->version, rec_ptr, 1);
-	
+
 	{ /* image production stats */
 
 		{ /* satellite id */
@@ -664,7 +664,7 @@ struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file )
 			memcpy_be32toh( &ass->forward_scan_start.msec, rec_ptr+4, 1);
 			memcpy_be16toh( &ass->forward_scan_end.days, rec_ptr+ 8, 1);
 			memcpy_be32toh( &ass->forward_scan_end.msec, rec_ptr+10, 1);
-			
+
 		} { /* reception summary stats */
 			int i;
 			struct _reception_summary_stats *rss = &trailer->image_production_stats.reception_summary_stats;
@@ -698,7 +698,7 @@ struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file )
 			memcpy_be32toh( &cov->northern_line,  rec_ptr+1*sizeof(uint32_t), 1 );
 			memcpy_be32toh( &cov->eastern_column, rec_ptr+2*sizeof(uint32_t), 1 );
 			memcpy_be32toh( &cov->western_column, rec_ptr+3*sizeof(uint32_t), 1 );
-			
+
 			cov = &trailer->image_production_stats.actual_coverage_lower_hrv;
 			rec_ptr += 4*sizeof(uint32_t);
 			memcpy_be32toh( &cov->southern_line,  rec_ptr, 1 );
@@ -713,7 +713,7 @@ struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file )
 			memcpy_be32toh( &cov->eastern_column, rec_ptr+2*sizeof(uint32_t), 1 );
 			memcpy_be32toh( &cov->western_column, rec_ptr+3*sizeof(uint32_t), 1);
 		}
-		
+
 	}
 
 	/* cleanup and return */
@@ -759,11 +759,11 @@ int msevi_l15_fprintf_trailer( FILE *f, struct msevi_l15_trailer *tr )
 		fprintf(f, "reduced_scan=%d\n", ass->reduced_scan );
 	} { /* reception summary stats */
 		int i;
-		struct _reception_summary_stats *rss; 
+		struct _reception_summary_stats *rss;
 
 		rss = &tr->image_production_stats.reception_summary_stats;
 		for(i=0; i<MSEVI_NR_CHAN; i++) {
-			fprintf(f, "chan=%d planned_lines=%d missing_lines=%d corrupted_lines=%d replaced_line=%d\n", 
+			fprintf(f, "chan=%d planned_lines=%d missing_lines=%d corrupted_lines=%d replaced_line=%d\n",
 				i, rss->planned_number_of_l10_lines[i], rss->number_of_missing_l10_lines[i],
 				rss->number_of_corrupted_l10_lines[i], rss->number_of_replaced_l10_lines[i] );
 		}

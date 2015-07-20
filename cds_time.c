@@ -15,7 +15,7 @@ time_t time_cds2unix(struct cds_time *ct)
 
 void time_unix2cds(time_t time, struct cds_time *ct)
 {
-	ct->days  = time/86400;	
+	ct->days  = time/86400;
 	ct->msec =  (time%86400) * 1000;
 	ct->days += day_off;
 	return;

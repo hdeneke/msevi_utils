@@ -1,4 +1,4 @@
-/** 
+/**
  *  \file    timeutils.c
  *  \brief   Utility functions for time handling
  *
@@ -15,14 +15,14 @@
 #include "timeutils.h"
 
 /**
- * static helper function for converting time strings to time_t 
+ * static helper function for converting time strings to time_t
  */
 
 static inline char char2tm(char *ptr, char conv, struct tm *tm)
 {
 	int c,retval;
 	char buf[5];
-	
+
 	switch ( conv ){
 	case 'Y':
 		strncpy( buf, ptr, 4 );
@@ -51,7 +51,7 @@ static inline char char2tm(char *ptr, char conv, struct tm *tm)
 		if ( c != 1) goto errexit;
 		/* tm_yday uses 0-365, %j uses 1-366 */
 		tm->tm_yday -= 1;
-		
+
 		retval = 3;
 		break;
 	case 'm':
@@ -89,14 +89,14 @@ static inline char char2tm(char *ptr, char conv, struct tm *tm)
 		buf[2] = 0x0;
 		c = sscanf( buf,"%d", &(tm->tm_sec) );
 		if ( c != 1) goto errexit;
-		retval = 2;		
+		retval = 2;
 		break;
 	default:
 		fprintf(stderr,"WARNING: illegal conversion specifier\n" );
 		retval = -1;
 	}
 	return retval;
-	
+
 errexit:
 	return -1;
 }
@@ -104,7 +104,7 @@ errexit:
 
 /**
  * static helper for converting a string representing a time to a
- * struct tm 
+ * struct tm
  * returns -1 on error
  */
 
@@ -113,7 +113,7 @@ static int utctimestr2tm( const char *s, const char *fmt, struct tm *tm)
 	int result=0;
 	char *fptr = (char *)fmt;
 	char *sptr = (char *)s;
-	
+
 	while( *fptr && *sptr ){
 		/* do we have a format field ?  */
 		if( *fptr == '%'  && *(fptr+1) ) {
@@ -135,7 +135,7 @@ static int utctimestr2tm( const char *s, const char *fmt, struct tm *tm)
 		}
 	}
 	if( !sptr && strchr(fptr,'%') ) return -1;
-	return 0;	
+	return 0;
 }
 
 
@@ -143,7 +143,7 @@ static int utctimestr2tm( const char *s, const char *fmt, struct tm *tm)
  * local portable implementation for timegm
  */
 static time_t my_timegm (struct tm *tm) {
-	
+
 	time_t ret;
 	char *tz = NULL;
 
@@ -171,9 +171,9 @@ static time_t my_timegm (struct tm *tm) {
  * variable, i.e. the seconds since 0:00 January 1st, 1970.
  *
  * \param[in]  timestr the time string
- * \param[in]  fmt     the format string, describing how the time is formated 
- *                     within the string. Supported format specifiers are: 
- *                     '%y', '%Y', '%m', '%d', '%j', '%H', '%M', '%S', 
+ * \param[in]  fmt     the format string, describing how the time is formated
+ *                     within the string. Supported format specifiers are:
+ *                     '%y', '%Y', '%m', '%d', '%j', '%H', '%M', '%S',
  *                     see man strftime for their meaning
  * \param[out] pt      a pointer to a time_t variable containing the output
  * \return             0 on success or -1 on failure
@@ -181,7 +181,7 @@ static time_t my_timegm (struct tm *tm) {
  * \author             Hartwig Deneke
  */
 
-int parse_utc_timestr( const char *timestr, const char *fmt, 
+int parse_utc_timestr( const char *timestr, const char *fmt,
 		       time_t *pt)
 {
 
@@ -205,8 +205,8 @@ int parse_utc_timestr( const char *timestr, const char *fmt,
 
 /**
  * \brief   returns a newly allocated string representing a time value
- * 
- * Represent a POSIX time_t variable containing seconds since 
+ *
+ * Represent a POSIX time_t variable containing seconds since
  * 1st of January, 1970, as a specifically formatted, newly allocated
  * string.
  *
@@ -220,7 +220,7 @@ int parse_utc_timestr( const char *timestr, const char *fmt,
 
 char *get_utc_timestr(const char *fmt, const time_t t)
 {
-	
+
 	static char time_str[256];
 	int c;
 	char *retval = NULL;
@@ -281,7 +281,7 @@ int main(int argc,char **argv)
 	time_t timeval;
 	char timebuf[32]={};
 	int i, reval=-1;
-	
+
 	if(argc==3){
 		i = parse_utc_timestr( argv[2], argv[1], &timeval );
 		if ( i >= 0){

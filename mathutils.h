@@ -38,13 +38,13 @@
 
 /**
  * \def SQRT(x)
- * \brief the squareroot of \a x 
+ * \brief the squareroot of \a x
  */
 #define SQRT(x) pow((x),0.5)
 
 /**
  * \def SQR(x)
- * \brief the square of \a x 
+ * \brief the square of \a x
  */
 #define SQR(x) ( (x)*(x) )
 /***** end MACRO definitions *************************************************/
@@ -52,8 +52,8 @@
 
 /***** datatype declarations  ************************************************/
 
-/** 
- * \struct index_range 
+/**
+ * \struct index_range
  * \brief A structure for holding an index range
  */
 struct index_range{
@@ -64,14 +64,14 @@ struct index_range{
 
 
 /***** function prototypes ***************************************************/
-int bracket(float value, float *array, const int nr, int *i_lower, 
+int bracket(float value, float *array, const int nr, int *i_lower,
 	    float *weight);
 void get_min_max(float *v,const int nv, float *vmin,float *vmax);
 int almost_equal(float A,float B, int maxUlps);
 void enclosing_indices(int n,float *x,float xmin,float xmax,
 		       int *ilower,int *ihigher);
-void ndim_lin_interp_get_idx_wght(const int ndim, const int *ivec, 
-				  const float *wvec, const int *shift, 
+void ndim_lin_interp_get_idx_wght(const int ndim, const int *ivec,
+				  const float *wvec, const int *shift,
 				  int *ivec_exp, float *wvec_exp);
 float polint(int n, float *xi, float *yi, float x);
 /***** end function prototypes ***********************************************/

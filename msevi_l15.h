@@ -135,7 +135,7 @@ struct msevi_l15_header {
 			uint8_t type_of_projection;
 			float   longitude_of_ssp;
 		} projection_description;
-		
+
 		struct _reference_grid {
 			uint32_t number_of_lines;
 			uint32_t number_of_columns;
@@ -144,7 +144,7 @@ struct msevi_l15_header {
 			uint8_t  grid_origin;
 		} reference_grid_vis_ir, reference_grid_hrv ;
 
-		struct msevi_l15_coverage planned_coverage_vis_ir;  
+		struct msevi_l15_coverage planned_coverage_vis_ir;
 		struct msevi_l15_coverage planned_coverage_hrv_lower;
 		struct msevi_l15_coverage planned_coverage_hrv_upper;
 
@@ -232,7 +232,7 @@ struct msevi_l15_trailer {
 		struct msevi_l15_coverage actual_coverage_upper_hrv;
 
 	} image_production_stats;
-	
+
 	struct _navigation_extraction_results {
 	} navigation_extraction_results;
 

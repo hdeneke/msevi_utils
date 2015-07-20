@@ -1,8 +1,8 @@
 /* system includes */
 #define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <assert.h>
 #include <math.h>
@@ -43,8 +43,8 @@ struct prog_opts {
 	bool   write_sat_angles;
 } popts= {
 	.nchan    = 12,
-	.chan     = { "vis006", "vis008", "ir_016", "ir_039", "wv_062", 
-		      "wv_073", "ir_087", "ir_097", "ir_108", "ir_120", 
+	.chan     = { "vis006", "vis008", "ir_016", "ir_039", "wv_062",
+		      "wv_073", "ir_087", "ir_097", "ir_108", "ir_120",
 		      "ir_134", "hrv" },
 	.time     = 0,
 	.dir      = ".",
@@ -88,7 +88,7 @@ static int parse_args (int argc, char **argv)
                  { .name = "region",  .has_arg = 1, .flag = NULL, .val = 'r'},
                  { .name = "service", .has_arg = 1, .flag = NULL, .val = 's'},
 	};
-	
+
 	while (1) {
 		c = getopt_long (argc, argv, optstr, pargs, &optidx);
 
@@ -133,7 +133,7 @@ int write_cds_time( hid_t hid, char *name, int n, struct cds_time *t )
 	// size_t cds_msize[2] = { sizeof(uint16_t), sizeof(uint32_t) };
 	hid_t  cds_type[2]  = { H5T_NATIVE_UINT16, H5T_NATIVE_UINT32 };
 	const char *cds_names[2]  = { "days", "milliseconds" };
-	
+
 	H5TBmake_table( "cds_time", hid, name, 2, n, cds_size, cds_names,
 			cds_off, cds_type, 32, NULL, 6, t );
 	return 0;
@@ -256,7 +256,7 @@ int main (int argc, char **argv)
 		printf("ERROR: Unable to find config file: msevi_satinf.json\n" );
 		printf("Set env. variable MSEVI_ANC_DIR to point to its directory\n" );
 		return -1;
-	}	
+	}
 	satinf = msevi_read_satinf( satinf_file, sat_id );
 	if( satinf==NULL ) {
 		printf("ERROR: sat_id=%d\n", sat_id );
@@ -271,7 +271,7 @@ int main (int argc, char **argv)
 		printf("ERROR: Unable to find config file: msevi_region.json\n" );
 		printf("Set env. variable MSEVI_ANC_DIR to point to its directory\n" );
 		return -1;
-	}	
+	}
 	reg = msevi_read_region( reg_file, popts.service, popts.region );
 	if( reg==NULL ) {
 		printf("ERROR: region=%s svc=%s\n", popts.region, popts.service);
@@ -331,7 +331,7 @@ int main (int argc, char **argv)
 	for( i=0; i<popts.nchan; i++ ) {
 		int r, id;
 		struct msevi_chaninf *chaninf;
-		
+
 		printf( "Reading channel=%s\n", popts.chan[i] );
 		id = msevi_chan2id( popts.chan[i] );
 		if( id!=12 ) { /* normal resolution channels */
@@ -343,7 +343,7 @@ int main (int argc, char **argv)
 			coverage_visir2hrv( &popts.coverage, &hrv_cov);
 			img = msevi_l15hrit_read_image( flist->nseg[id-1], flist->channel[id-1],
 							&hrv_cov );
-			
+
 			msevi_l15hdf_append_coverage( meta_gid, "coverage", &hrv_cov );
 		}
 		if(img==NULL) goto err_out;
@@ -407,7 +407,7 @@ int main (int argc, char **argv)
 	mu0 = calloc(npix, sizeof(float));
 	az0 = calloc(npix, sizeof(float));
 	if( mu0==NULL || az0==NULL ) goto err_out;
-	
+
 	/* calculate geolocation and satellite/sun angles */
 	geos_latlon2d( gp, proj_ss_lon, reg->nlin, reg->ncol, lat, lon );
 	dim[0] = reg->nlin; dim[1] = reg->ncol;
@@ -489,7 +489,7 @@ int main (int argc, char **argv)
 err_out:
 	printf("Error\n");
 	return -1;
-	
+
 }
 
 

@@ -1,8 +1,8 @@
 /* system includes */
 #define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <math.h>
 
@@ -122,7 +122,7 @@ int main( int argc, char **argv )
 err_out:
 	printf("Error\n");
 	return -1;
-	
+
 }
 
 

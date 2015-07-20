@@ -1,6 +1,6 @@
-/** 
+/**
  *  \file    h5utils.c
- *  \brief   HDF5 utility functions 
+ *  \brief   HDF5 utility functions
  *
  *  \author  Hartwig Deneke
  */
@@ -43,7 +43,7 @@ hid_t H5UTfile_open (const char *fname, unsigned int flags, hid_t create_id,
 #endif
 
 /**
- * \brief returns the length of a string attribute 
+ * \brief returns the length of a string attribute
  *
  * \param[in]  loc_id     the location of the object containing the attribute
  * \param[in]  obj_name   the name of the object containing the attribute
@@ -98,7 +98,7 @@ char *H5UTget_attribute_string(hid_t loc_id,char *obj_name, char *attr_name )
 
 /**
  * \brief return number of dimensions, length of dimensions and datatype size
- * 
+ *
  * \param[in]    loc_id     the location of the object containing the attribute
  * \param[in]    obj_name   the name of the object, or NULL
  * \param[inout] ndim       the number of dimensions, or NULL
@@ -108,21 +108,21 @@ char *H5UTget_attribute_string(hid_t loc_id,char *obj_name, char *attr_name )
  *
  * \return zero on success, otherwise -1 and errno is set appropriately
  */
-herr_t H5UTdataset_get_info (hid_t loc_id, char *obj_name, int *ndim, 
+herr_t H5UTdataset_get_info (hid_t loc_id, char *obj_name, int *ndim,
 			     int *dims, int *type_size)
 {
 	hid_t obj_id, sid, tid;
-	hsize_t *hdims; 
+	hsize_t *hdims;
 	int i, r, nd;
 
 	obj_id = obj_name ? H5Dopen1 (loc_id, obj_name) : loc_id;
 	if (obj_id<0) return -1;
-	
+
 	if (ndim) {
 
 		sid = H5Dget_space (obj_id);
 		nd = H5Sget_simple_extent_ndims (sid);
-		
+
 		if( dims ) {
 
 			hdims = calloc (nd, sizeof(hsize_t));
@@ -130,10 +130,10 @@ herr_t H5UTdataset_get_info (hid_t loc_id, char *obj_name, int *ndim,
 				errno = ENOMEM;
 				return -1;
 			}
-		
+
 			r = H5Sget_simple_extent_dims (sid, hdims, NULL);
 			if (r < 0) return -1;
-		
+
 			for (i=0; i<*ndim; i++) dims[i] = hdims[i];
 			free (hdims);
 		}
@@ -146,7 +146,7 @@ herr_t H5UTdataset_get_info (hid_t loc_id, char *obj_name, int *ndim,
 		*type_size = H5Tget_size (tid);
 		H5Tclose (tid);
 	}
-	
+
 	/* cleanup and return */
 	if (obj_name) H5Dclose (obj_id);
 	return 0;
@@ -242,7 +242,7 @@ int H5UTwrite_dataset (hid_t loc_id, const char *obj_name, void *data, int *offs
 	filespace_id = H5Dget_space (obj_id);
 	ndim = H5Sget_simple_extent_ndims (filespace_id);
 	H5Sget_simple_extent_dims (filespace_id, dims, NULL);
-	
+
 	hoffset = calloc (ndim, sizeof(hsize_t));
 	if (offset) {for (i=0; i<ndim; i++) hoffset[i] = offset[i];}
 
@@ -250,14 +250,14 @@ int H5UTwrite_dataset (hid_t loc_id, const char *obj_name, void *data, int *offs
 	if (count)  {
 		for (i=0; i<ndim; i++) hcount[i] = count[i];
 	} else {
-		H5Sget_simple_extent_dims (filespace_id, hcount, NULL);	
+		H5Sget_simple_extent_dims (filespace_id, hcount, NULL);
 	}
 
 	/* select subset */
-	s = H5Sselect_hyperslab (filespace_id, H5S_SELECT_SET, hoffset, 
+	s = H5Sselect_hyperslab (filespace_id, H5S_SELECT_SET, hoffset,
 				 NULL, hcount, NULL);
 	memspace_id = H5Screate_simple (ndim, hcount, NULL);
-	
+
 	/* everything setup properly, now write data */
 	s = H5Dwrite (obj_id, type_id, memspace_id, filespace_id, H5P_DEFAULT, data);
 
@@ -286,7 +286,7 @@ int H5UTwrite_dataset (hid_t loc_id, const char *obj_name, void *data, int *offs
  *
  * \return zero on success, otherwise -1 and errno is set appropriately
  */
-int H5UTread_dataset (hid_t loc_id, char *obj_name, void *data, 
+int H5UTread_dataset (hid_t loc_id, char *obj_name, void *data,
 		      int *offset, int *count)
 {
 	hid_t obj_id, type_id;
@@ -296,7 +296,7 @@ int H5UTread_dataset (hid_t loc_id, char *obj_name, void *data,
 
 	obj_id = obj_name ? H5Dopen1 (loc_id, obj_name) : loc_id;
 	if (obj_id<0) return -1;
-	
+
 	src_space = H5Dget_space (obj_id);
 	assert (src_space >= 0);
 
@@ -324,9 +324,9 @@ int H5UTread_dataset (hid_t loc_id, char *obj_name, void *data,
 	type_id = H5Dget_type (obj_id);
 
 	/* read data */
-	r = H5Dread (obj_id,  H5Tget_native_type(type_id,H5T_DIR_ASCEND), 
+	r = H5Dread (obj_id,  H5Tget_native_type(type_id,H5T_DIR_ASCEND),
 		     trgt_space, src_space, H5P_DEFAULT, data);
-	
+
 	/* cleanup */
 	H5Tclose (type_id);
 	H5Sclose (src_space);
@@ -390,7 +390,7 @@ int H5UTfind_attribute (hid_t loc_id, char *obj_name, char *attr_name)
  *
  * \return  0 on SUCESS, and -1 on failure
  */
-int H5UTset_attribute_string_array (int loc_id, char *obj_name, char *attr_name, int nstr, 
+int H5UTset_attribute_string_array (int loc_id, char *obj_name, char *attr_name, int nstr,
 				    char **str)
 {
 	hid_t obj_id, dataspace_id, type_id, str_array_id;

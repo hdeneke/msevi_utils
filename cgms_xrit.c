@@ -104,7 +104,7 @@ void *xrit_read_data( struct xrit_file *xf)
 	if(data==NULL) goto err_out;
 
 	fseek( xf->fp, xf->header_len, SEEK_SET );
-	r = fread( data, nbyte, 1, xf->fp );	
+	r = fread( data, nbyte, 1, xf->fp );
 	if(r<1) goto err_out;
 
 	return data;
@@ -142,7 +142,7 @@ void *xrit_find_hrec( void *hdr, size_t len, int hrec_type )
 }
 
 /**
- * \brief  Decode a XRIT header record 
+ * \brief  Decode a XRIT header record
  *
  * \param[in]  hdr        a pointer to the header
  * \param[in]  len        the length of the header
@@ -155,7 +155,7 @@ void *xrit_decode_hrec( void *hrec )
 {
 	uint8_t  hrec_type;
 	uint16_t hrec_len;
-	
+
 
 	memcpy(&hrec_type, hrec, 1);
 	memcpy_be16toh(&hrec_len, hrec+1, 1);

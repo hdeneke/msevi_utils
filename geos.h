@@ -12,7 +12,7 @@
 
 /***** datatype declarations  ************************************************/
 
-/** 
+/**
  * \struct geos_ctx
  * \brief structure with context/parameter info for geostationary satellite
  *        projection
@@ -36,7 +36,7 @@ struct geos_param {
 struct geos_param* geos_init( float x0, float y0, float dx, float dy );
 void geos_free( struct geos_param* gp );
 
-int geos_latlon2d( struct geos_param *gp, float sslon, int nlin, int ncol, 
+int geos_latlon2d( struct geos_param *gp, float sslon, int nlin, int ncol,
 		   float *lat, float *lon );
 int geos_satpos2d( struct geos_param *gp, float sslon, int nlin, int ncol,
 		   float *lat, float *lon, float *muS, float *azS );

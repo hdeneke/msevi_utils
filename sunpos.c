@@ -18,7 +18,7 @@
 static inline float jday2mnlon( double jd )
 {
 	float mnlon;
-	mnlon  = 280.460 + 0.9856474*jd; 
+	mnlon  = 280.460 + 0.9856474*jd;
 	mnlon  = DEG2PVAL(mnlon);
 	return(mnlon);
 }
@@ -67,17 +67,17 @@ void sun_dec_ra( double jd, float *dec, float *ra )
 
 	mnlon  = jday2mnlon(jd); 	    /* mean longitude in  degrees */
 	mnanom = DEG2RAD(jday2mnanom(jd));  /* mean anomaly in radians    */
-	
+
 	/* ecliptic longitude and obliquity  *
 	 * of ecliptic in radians            */
 
 	/* OLD VERSION:
-	   eclon = mnlon + 1.915*sin(mnanom) + 0.020*sin(2.*mnanom); 
+	   eclon = mnlon + 1.915*sin(mnanom) + 0.020*sin(2.*mnanom);
 	   converted with: sin(2x)=2*sin(x)*cos(x)  */
 	sincosf(mnanom, &sin_mnanom, &cos_mnanom);
 	eclon = mnlon + sin_mnanom*(1.915 + 0.040*cos_mnanom);
 	eclon  = DEG2RAD(eclon);
-	
+
 	oblqec = 23.439 - 0.0000004*jd;
 	oblqec = DEG2RAD(oblqec);
 
@@ -92,7 +92,7 @@ void sun_dec_ra( double jd, float *dec, float *ra )
 	den = cos_eclon;
 	*ra = atan2f(num, den);
 	if(*ra < 0.0) *ra += 2.*M_PI;
-	
+
 	return;
 }
 
@@ -113,7 +113,7 @@ void sunpos ( double jd, float lat, float lon, float *mu0, float *az0 )
         float sin_lat, cos_lat, sin_lon, cos_lon;
         float ra, gmst;
         float sin_gha, cos_gha, sin_ha, cos_ha;
-        
+
 	/* calc. solar declination/right ascension */
 	sun_dec_ra( jd, &dec, &ra );
 	sincosf(dec, &sin_dec, &cos_dec);
@@ -125,11 +125,11 @@ void sunpos ( double jd, float lat, float lon, float *mu0, float *az0 )
 	/* trig. funcs of location */
 	sincosf(DEG2RAD(lat), &sin_lat, &cos_lat);
 	sincosf(DEG2RAD(lon), &sin_lon, &cos_lon);
-                        
+
 	/* trig. funcs of hour angle */
 	sin_ha = sin_gha*cos_lon + cos_gha*sin_lon;
 	cos_ha = cos_gha*cos_lon - sin_gha*sin_lon;
-                                
+
 	/* calc. sun position */
 	*mu0 = sin_dec*sin_lat + cos_dec*cos_lat*cos_ha;
 	*az0 = asin(-cos_dec*sin_ha/sqrt(1.0-SQR(*mu0)));
@@ -166,7 +166,7 @@ void sunpos2d ( double jd, double dt, int nlin, int ncol,
         float sin_lat, cos_lat, sin_lon, cos_lon;
         float ra, gmst;
         float sin_gha, cos_gha, sin_ha, cos_ha;
-        
+
         for( l=0; l<nlin; l++ ) {
                 sun_dec_ra( jd+dt*l, &dec, &ra );
                 sincosf(dec, &sin_dec, &cos_dec);
@@ -182,11 +182,11 @@ void sunpos2d ( double jd, double dt, int nlin, int ncol,
 			/* trig. funcs of location */
                         sincosf(DEG2RAD(lat[i]), &sin_lat, &cos_lat);
                         sincosf(DEG2RAD(lon[i]), &sin_lon, &cos_lon);
-                        
+
                         /* trig. funcs of hour angle */
                         sin_ha = sin_gha*cos_lon + cos_gha*sin_lon;
                         cos_ha = cos_gha*cos_lon - sin_gha*sin_lon;
-                                
+
                         /* calc. sun position */
                         mu0[i] = sin_dec*sin_lat + cos_dec*cos_lat*cos_ha;
                         az0[i] = asin(-cos_dec*sin_ha/sqrt(1.0-SQR(mu0[i])));

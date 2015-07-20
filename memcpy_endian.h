@@ -24,7 +24,7 @@ static inline void memcpy_be32toh( void *dest, void *src, size_t n )
 	size_t   i;
 	uint32_t *s = src;
 	uint32_t *d = dest;
-	
+
 	for( i=0; i<n; i++ ) {
 		val = be32toh(*s);
 		memcpy(d, &val, sizeof(uint32_t));
@@ -43,7 +43,7 @@ static inline void memcpy_be64toh( void *dest, void *src, size_t n )
 	size_t   i;
 	uint64_t *s = src;
 	uint64_t *d = dest;
-	
+
 	for( i=0; i<n; i++ ) {
 		val = be64toh(*s);
 		memcpy(d, &val, sizeof(uint64_t));

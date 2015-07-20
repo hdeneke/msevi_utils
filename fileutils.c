@@ -1,7 +1,7 @@
-/** 
+/**
     \file    fileutils.c
     \brief   Utility functions for file handling
-    
+
     \author  Hartwig Deneke
     \date    2008/06/10
 */
@@ -30,9 +30,9 @@ static int checkperm (const char *path, const char *perm);
 
 
 /**
- * \brief return information about a directory 
+ * \brief return information about a directory
  *
- * \param[in]  path    the path pointing to the file 
+ * \param[in]  path    the path pointing to the file
  * \param[out] perm    a character array of file permissions to test,
  *                     (r=read, w=write, x=execute), or NULL if no permissions
  *                     should be tested
@@ -45,11 +45,11 @@ int dir_info (const char *path, const char *perm)
 {
 	int retval;
 	struct stat stat_data;
-	
-	/* fill-in stat structure */ 
+
+	/* fill-in stat structure */
 	retval = stat (path, &stat_data);
 	if (retval < 0) goto ret_out;
-	
+
 	/* check if we have a regular file */
 	if (!S_ISDIR(stat_data.st_mode)) {
 		retval = -1;
@@ -60,7 +60,7 @@ int dir_info (const char *path, const char *perm)
 	if (perm) {
 		retval = checkperm (path, perm);
 	}
-	
+
 	/* return to caller */
 ret_out:
 	return retval;
@@ -68,9 +68,9 @@ ret_out:
 
 
 /**
- * \brief return information about a regular file 
+ * \brief return information about a regular file
  *
- * \param[in]  path    the path pointing to the file 
+ * \param[in]  path    the path pointing to the file
  * \param[out] perm    a character array of file permissions to test,
  *                     (r=read, w=write, x=execute), or NULL if no permissions
                        should be tested
@@ -83,17 +83,17 @@ int file_info (const char *path, const char *perm, off_t *size)
 	int retval;
 	struct stat stat_data;
 
-	/* fill-in stat structure */ 
+	/* fill-in stat structure */
 	retval = stat (path, &stat_data);
 	if (retval < 0) goto ret_out;
-	
+
 	/* check if we have a regular file */
 	if (!S_ISREG(stat_data.st_mode)) {
 		retval = -1;
 		goto ret_out;
 	}
 
-	/* return size if requested */ 
+	/* return size if requested */
 	if (size) {
 		*size = stat_data.st_size;
 	}
@@ -102,7 +102,7 @@ int file_info (const char *path, const char *perm, off_t *size)
 	if (perm) {
 		retval = checkperm (path, perm);
 	}
-	
+
 	/* return to caller */
 ret_out:
 	return retval;
