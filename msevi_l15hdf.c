@@ -204,20 +204,26 @@ int msevi_l15hdf_append_coverage( hid_t hid, char *name, struct msevi_l15_covera
 	return r;
 }
 
-int msevi_l15hdf_read_coverage( hid_t gid, char *name, struct msevi_l15_coverage *cov )
+struct msevi_l15_coverage *msevi_l15hdf_read_coverage( hid_t gid, char *name, char *chan )
 {
-	int r;
-	hid_t cov_types[5] = { 0, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32, H5T_NATIVE_UINT32,
-			       H5T_NATIVE_UINT32 };
-	hid_t strtype;
+	int i, r;
+	hsize_t nrec, nf;
+	struct msevi_l15_coverage *cov;
 
-	strtype = H5Tcopy( H5T_C_S1 );
-	H5Tset_size( strtype, 8 );
-	cov_types[0] = strtype;
-	r = H5TBread_records( gid, name, 0, 1, cov_size, cov_offsets,
-			      cov_membsize, cov );
-	H5Tclose( strtype);
-	return r;
+	/* allocate return value */
+	cov = calloc(1,sizeof(struct msevi_l15_coverage));
+	if(cov==NULL) goto err_out;
+	/* get number of records */
+	r = H5TBget_table_info( gid, name, &nf, &nrec);
+	if(r<0) goto err_out;
+	for(i=0;i<nrec;i++) {
+		r = H5TBread_records( gid, name, 0, 1, cov_size, cov_offsets,
+				      cov_membsize, cov );
+		if(strncmp(cov->channel,chan,8)==0) break;
+	}
+
+err_out:
+	return cov;
 }
 
 const static size_t chaninf_size     = sizeof(struct msevi_chaninf);
