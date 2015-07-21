@@ -100,6 +100,22 @@ struct msevi_l15_image *msevi_l15hdf_read_image( hid_t fid, int chan_id )
 	if (r<0)  goto err_out;
 	r = H5LTget_attribute_ushort ( gid_img, dset, "channel_id", &img->channel_id );
 	if (r<0)  goto err_out;
+	if( chan_id<=MSEVI_CHAN_IR_039 || chan_id==MSEVI_CHAN_HRV) { /* solar channels */
+		r = H5LTget_attribute_double ( gid_img, dset, "f0", &img->f0 );
+		if (r<0)  goto err_out;
+		r = H5LTget_attribute_double ( gid_img, dset, "refl_slope", &img->refl_slope );
+		if (r<0)  goto err_out;
+		r = H5LTget_attribute_double ( gid_img, dset, "refl_offset", &img->refl_offset );
+		if (r<0)  goto err_out;
+	}
+	if( chan_id>=MSEVI_CHAN_IR_039 && chan_id<=MSEVI_CHAN_IR_134 ) { /* thermal channels */
+		r = H5LTget_attribute_double ( gid_img, dset, "alpha", &img->alpha );
+		if (r<0)  goto err_out;
+		r = H5LTget_attribute_double ( gid_img, dset, "beta", &img->beta );
+		if (r<0)  goto err_out;
+		r = H5LTget_attribute_double ( gid_img, dset, "nu_c", &img->nu_c );
+		if (r<0)  goto err_out;
+	}
 	return img;
 
 err_out:
