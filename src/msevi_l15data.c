@@ -7,7 +7,7 @@
 /* Local includes */
 #include "parson.h"
 #include "cds_time.h"
-#include "msevi_l15.h"
+#include "msevi_l15data.h"
 
 /* SEVIRI channel names */
 const static char *msevi_chan[12] = {

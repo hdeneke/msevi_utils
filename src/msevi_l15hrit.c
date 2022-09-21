@@ -16,9 +16,9 @@
 #include "mathutils.h"
 #include "timeutils.h"
 #include "cgms_xrit.h"
-#include "msevi_l15.h"
+#include "msevi_l15data.h"
 #include "msevi_l15hrit.h"
-#include "eum_wavelet.h"
+#include "eumwavelet.h"
 #include "sunpos.h"
 
 /* SEVIRI L15 header record lengths */

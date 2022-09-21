@@ -23,10 +23,9 @@
 #include "timeutils.h"
 #include "cgms_xrit.h"
 #include "cds_time.h"
-#include "msevi_l15.h"
+#include "msevi_l15data.h"
 #include "msevi_l15hrit.h"
 #include "msevi_l15hdf.h"
-#include "eum_wavelet.h"
 #include "geos.h"
 #include "sunpos.h"
 

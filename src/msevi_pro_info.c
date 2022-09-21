@@ -20,9 +20,10 @@
 #include "timeutils.h"
 #include "cgms_xrit.h"
 #include "cds_time.h"
-#include "msevi_l15.h"
+#include "msevi_l15data.h"
 #include "msevi_l15hrit.h"
-#include "eum_wavelet.h"
+#include "eumwavelet.h"
+
 
 double cheb_eval( double x, int n, double *c, double a, double b )
 {
