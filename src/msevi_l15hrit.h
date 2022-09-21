@@ -44,4 +44,4 @@ int msevi_l15hrit_annotate_image( struct msevi_l15_image   *img,
 
 int msevi_l15_fprintf_header( FILE *f, struct msevi_l15_header *hdr );
 int msevi_l15_fprintf_trailer( FILE *f, struct msevi_l15_trailer *tr );
-void *msevi_l15_hrit_decode_hrec( void *hrec );
+void *msevi_l15hrit_decode_hrec( void *hrec );

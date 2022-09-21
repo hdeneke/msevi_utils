@@ -188,9 +188,9 @@ struct msevi_l15_image *msevi_l15hrit_read_segment( char *fnam )
 	hrec = xrit_find_hrec(hdr, xf->header_len, XRIT_HREC_IMAGE_NAVIGATION);
 	img_nav = xrit_decode_hrec(hrec);
 	hrec = xrit_find_hrec(hdr, xf->header_len, MSEVI_HREC_SEGMENT_IDENTIFICATION );
-	seg_id = msevi_l15_hrit_decode_hrec(hrec);
+	seg_id = msevi_l15hrit_decode_hrec(hrec);
 	hrec = xrit_find_hrec(hdr, xf->header_len, MSEVI_HREC_SEGMENT_LINE_QUALITY);
-	line_qual = msevi_l15_hrit_decode_hrec(hrec);
+	line_qual = msevi_l15hrit_decode_hrec(hrec);
 
 	/* allocate image */
 	img = calloc(1,sizeof(*img));
@@ -304,10 +304,11 @@ int msevi_l15hrit_get_segment_coverage( char *fnam, struct msevi_l15_coverage *c
 
 	hrec = xrit_find_hrec(hdr, xf->header_len, XRIT_HREC_IMAGE_STRUCTURE);
 	img_struct = xrit_decode_hrec(hrec);
+
 	hrec = xrit_find_hrec(hdr, xf->header_len, XRIT_HREC_IMAGE_NAVIGATION);
 	img_nav = xrit_decode_hrec(hrec);
 	hrec = xrit_find_hrec(hdr, xf->header_len, MSEVI_HREC_SEGMENT_IDENTIFICATION );
-	seg_id = msevi_l15_hrit_decode_hrec(hrec);
+	seg_id = msevi_l15hrit_decode_hrec(hrec);
 
 	if(seg_id->channel_id==12) { /* special-case HRV */
 		cov->southern_line  = 5566-img_nav->loff+1;
@@ -315,6 +316,7 @@ int msevi_l15hrit_get_segment_coverage( char *fnam, struct msevi_l15_coverage *c
 		cov->eastern_column = 5566-img_nav->coff+1;
 		cov->western_column = cov->eastern_column+img_struct->ncol-1;
 	} else {
+
 		cov->southern_line  = 1856-img_nav->loff+1;
 		cov->northern_line  = cov->southern_line+img_struct->nlin-1;
 		cov->eastern_column = 1856-img_nav->coff+1;
@@ -364,7 +366,6 @@ struct msevi_l15_image *msevi_l15hrit_read_image( int nfile, char **files,
 		struct msevi_l15_coverage seg_cov;
 		r = msevi_l15hrit_get_segment_coverage( files[i], &seg_cov );
 		if( coverage_overlaps(cov, &seg_cov) ) {
-			printf("Reading: %s\n", files[i] );
 			seg = msevi_l15hrit_read_segment( files[i] );
 			if(seg==NULL) goto err_out;
 
@@ -382,7 +383,7 @@ err_out:
 }
 
 
-void *msevi_l15_hrit_decode_hrec( void *hrec )
+void *msevi_l15hrit_decode_hrec( void *hrec )
 {
 	uint8_t  hrec_type;
 	uint16_t hrec_len;
