@@ -12,7 +12,7 @@
 double jday2gmst( double jd );
 void   sun_dec_ra( double jd, float *dec, float *ra );
 void   sunpos( double jd, float lat, float lon, float *mu0, float *az0 );
-void   sunpos2d ( double jd, double dt, int nlin, int ncol,
-		  float *lat, float *lon, float *mu0, float *az0 );
+void   sunpos2d ( struct cds_time *ct, int nlin, int ncol,
+		  float *lat, float *lon, uint16_t *zen0, uint16_t *az0 );
 float  sun_earth_distance( double jd );
 #endif /* _SUNPOS_H_ */

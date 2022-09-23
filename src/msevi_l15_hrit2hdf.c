@@ -174,7 +174,8 @@ static char *find_config_file(char *fnam )
 
 	env = getenv("MSEVI_ANC_DIR");
 	if (env!=NULL) {
-		n = strlen(fnam)+strlen(env)+2;
+		n = strlen(fnam) + strlen(env) + 2;
+		cfile = calloc(1, n);
 		strncpy(cfile,env,n);
 		strncat(cfile,"/",n);
 		strncat(cfile,fnam,n);
@@ -212,10 +213,10 @@ int main (int argc, char **argv)
 
 	char *timestr;
 	struct cds_time *line_acq_time;
-	double jd;
 
 	hsize_t dim[2];
-	float *lat, *lon, *muS, *azS, *mu0, *az0;
+	float *lat, *lon, *muS, *azS;
+	uint16_t *sat_zen, *sat_azi, *sun_zen, *sun_azi;
 	// RSS: reg_str = "800x600+1356+156";
 	// HRS: reg_str = "800x600+1556+156";
 	// StratoCu: reg_str = "354x37+1502+2380";
@@ -399,14 +400,6 @@ int main (int argc, char **argv)
 	lon = calloc(npix, sizeof(float));
 	if( lat==NULL || lon==NULL ) goto err_out;
 
-	muS = calloc(npix, sizeof(float));
-	azS = calloc(npix, sizeof(float));
-	if( muS==NULL || azS==NULL ) goto err_out;
-
-	mu0 = calloc(npix, sizeof(float));
-	az0 = calloc(npix, sizeof(float));
-	if( mu0==NULL || az0==NULL ) goto err_out;
-
 	/* calculate geolocation and satellite/sun angles */
 	geos_latlon2d( gp, proj_ss_lon, reg->nlin, reg->ncol, lat, lon );
 	dim[0] = reg->nlin; dim[1] = reg->ncol;
@@ -423,50 +416,67 @@ int main (int argc, char **argv)
 	}
 
 	if( popts.write_sat_angles ) {
-		uint16_t *cnt_zen = (uint16_t *)((void *)muS);
-		uint16_t *cnt_azi = (uint16_t *)((void *)azS);
+
+		sat_zen = calloc(npix, sizeof(uint16_t));
+		sat_azi = calloc(npix, sizeof(uint16_t));
+
+		muS = calloc(npix, sizeof(float));
+		azS = calloc(npix, sizeof(float));
+
+		if( sat_zen==NULL || sat_azi==NULL || muS==NULL || azS==NULL ) {
+			printf("Allocation of satellite angles failed!");
+			goto err_out;
+		}
 
 		geos_satpos2d( gp, true_ss_lon, reg->nlin, reg->ncol, lat, lon, muS, azS );
-		for(i=0;i<npix;i++) cnt_zen[i] = (uint16_t) round(RAD2DEG(acosf(muS[i]))*100.0);
-		for(i=0;i<npix;i++) cnt_azi[i] = (uint16_t) round(azS[i]*100.0);
+		for(i=0;i<npix;i++) sat_zen[i] = (uint16_t) round(RAD2DEG(acosf(muS[i]))*100.0);
+		for(i=0;i<npix;i++) sat_azi[i] = (uint16_t) round(azS[i]*100.0);
 
-		r = H5UTmake_dataset( geom_gid, "satellite_zenith", 2, dim, H5T_NATIVE_UINT16, cnt_zen, 6 );
+		r = H5UTmake_dataset( geom_gid, "satellite_zenith", 2, dim, H5T_NATIVE_UINT16, sat_zen, 6 );
 		if(r<0) goto err_out;
 		r = sdset_annotate( geom_gid, "satellite_zenith", "satellite zenith angle", "degrees",
 				    0.01, 0.0 );
 		if(r<0) goto err_out;
-		r = H5UTmake_dataset( geom_gid, "satellite_azimuth", 2, dim, H5T_NATIVE_UINT16, cnt_azi, 6 );
+		r = H5UTmake_dataset( geom_gid, "satellite_azimuth", 2, dim, H5T_NATIVE_UINT16, sat_azi, 6 );
 		if(r<0) goto err_out;
 		r = sdset_annotate( geom_gid, "satellite_azimuth", "satellite azimuth angle", "degrees",
 				    0.01, 0.0 );
 		if(r<0) goto err_out;
+
+		free(sat_zen);
+		free(sat_azi);
+		free(muS);
+		free(azS);
 	}
 
 	if( popts.write_sun_angles ) {
-		double dt = -0.2/8.64e+04;
-		uint16_t *cnt_zen = (uint16_t *)((void *)muS);
-		uint16_t *cnt_azi = (uint16_t *)((void *)azS);
 
-		jd = (double)(line_acq_time[0].days-15340)-0.5 + line_acq_time[0].msec/8.64e+07;
-		sunpos2d( jd, dt, reg->nlin, reg->ncol, lat, lon, mu0, az0 );
-		for(i=0;i<npix;i++) cnt_zen[i] = (uint16_t) roundf(RAD2DEG(acosf(mu0[i]))*100.0);
-		for(i=0;i<npix;i++) cnt_azi[i] = (uint16_t) roundf(az0[i]*100.0);
+		sun_zen = calloc(npix, sizeof(uint16_t));
+		sun_azi = calloc(npix, sizeof(uint16_t));
 
-		r = H5UTmake_dataset( geom_gid, "sun_zenith", 2, dim, H5T_NATIVE_UINT16, cnt_zen, 6 );
+		if( sun_zen==NULL || sun_azi==NULL) {
+			printf("Allocation of sun angles failed!");
+			goto err_out;
+		}
+
+		sunpos2d( line_acq_time, reg->nlin, reg->ncol, lat, lon, sun_zen, sun_azi );
+
+		r = H5UTmake_dataset( geom_gid, "sun_zenith", 2, dim, H5T_NATIVE_UINT16, sun_zen, 6 );
 		if(r<0) goto err_out;
 		r = sdset_annotate( geom_gid, "sun_zenith", "sun zenith angle", "degrees", 0.01, 0.0 );
 		if(r<0) goto err_out;
-		r = H5UTmake_dataset( geom_gid, "sun_azimuth", 2, dim, H5T_NATIVE_UINT16, cnt_azi, 6 );
+		r = H5UTmake_dataset( geom_gid, "sun_azimuth", 2, dim, H5T_NATIVE_UINT16, sun_azi, 6 );
 		if(r<0) goto err_out;
 		r = sdset_annotate( geom_gid, "sun_azimuth", "sun azimuth angle", "degrees", 0.01, 0.0 );
 		if(r<0) goto err_out;
+
+		free(sun_zen);
+		free(sun_azi);
 	}
 
 	/* close group/file */
 	free(lat);
 	free(lon);
-	free(muS);
-	free(azS);
 
 	/* close image group/file */
 	printf( "Closing file and exit...\n" );

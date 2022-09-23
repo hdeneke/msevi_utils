@@ -3,9 +3,11 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <math.h>
 
 #include "mathutils.h"
+#include "cds_time.h"
 #include "sunpos.h"
 
 /*********************************************************************
@@ -152,26 +154,30 @@ void sunpos ( double jd, float lat, float lon, float *mu0, float *az0 )
  * \param[in]  ncol    the number of columns of the image
  * \param[in]  lat     the latitude [in degrees north]
  * \param[in]  lon     the longitude [in degrees east]
- * \param[out] mu0     the cosine of the solar zenith angle
+ * \param[out] zen0     the cosine of the solar zenith angle
  * \param[out] az0     the azimuth angle [in degrees]
  *
  * \return  nothing
  */
-void sunpos2d ( double jd, double dt, int nlin, int ncol,
-		float *lat, float *lon,
-		float *mu0, float *az0 )
+void sunpos2d ( struct cds_time *ct, int nlin, int ncol,
+		float *lat, float *lon, uint16_t *zen0, uint16_t *az0 )
 {
         int i, l, c;
         float dec, sin_dec, cos_dec;
         float sin_lat, cos_lat, sin_lon, cos_lon;
         float ra, gmst;
         float sin_gha, cos_gha, sin_ha, cos_ha;
+	float mu0, azf;
+	double jd;
 
         for( l=0; l<nlin; l++ ) {
-                sun_dec_ra( jd+dt*l, &dec, &ra );
+		if(ct[l].days==0) continue;
+		jd = (ct[l].days-15340)-0.5 + ct[l].msec/8.64e+07;
+		//printf("%d %d %f\n",l, ct[l].days, jd);
+                sun_dec_ra( jd, &dec, &ra );
                 sincosf(dec, &sin_dec, &cos_dec);
 
-                gmst = jday2gmst(jd+dt);
+                gmst = jday2gmst(jd);
                 sincosf(DEG2RAD(gmst*15.0)-ra, &sin_gha, &cos_gha);
 
                 for( c=0; c<ncol; c++ ) {
@@ -188,14 +194,19 @@ void sunpos2d ( double jd, double dt, int nlin, int ncol,
                         cos_ha = cos_gha*cos_lon - sin_gha*sin_lon;
 
                         /* calc. sun position */
-                        mu0[i] = sin_dec*sin_lat + cos_dec*cos_lat*cos_ha;
-                        az0[i] = asin(-cos_dec*sin_ha/sqrt(1.0-SQR(mu0[i])));
-                        if( sin_dec >= mu0[i]*sin_lat ) {
-                                if( az0[i] < 0.0 ) az0[i] += 2.0*M_PI;
+                        mu0 = sin_dec*sin_lat + cos_dec*cos_lat*cos_ha;
+                        azf = asin(-cos_dec*sin_ha/sqrt(1.0-SQR(mu0)));
+
+                        if( sin_dec >= mu0*sin_lat ) {
+                                if( azf < 0.0 ) azf += 2.0*M_PI;
                         } else {
-                                az0[i] = M_PI - az0[i];
+                                azf = M_PI - azf;
                         }
-                        az0[i] = RAD2DEG(az0[i]);
+
+			// printf("%f %f\n",RAD2DEG(acosf(mu0)),RAD2DEG(azf));
+
+			zen0[i] = (uint16_t) roundf(RAD2DEG(acosf(mu0))*100.0);
+			az0[i]  = (uint16_t) roundf(RAD2DEG(azf)*100.0);
 		}
         }
         return;
