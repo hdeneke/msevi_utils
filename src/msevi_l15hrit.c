@@ -13,6 +13,7 @@
 /* Local includes */
 #include "memcpy_endian.h"
 #include "cds_time.h"
+#include "fileutils.h"
 #include "mathutils.h"
 #include "timeutils.h"
 #include "cgms_xrit.h"
@@ -445,6 +446,7 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 	struct xrit_file *pro;
 	void *data;
 	void *rec_ptr;
+	off_t nbyte;
 
 	/* allocate structure */
 	header = calloc( 1, sizeof(*header) );
@@ -454,6 +456,14 @@ struct msevi_l15_header *msevi_l15hrit_read_prologue( char *file )
 	if( pro->ftype!=MSEVI_L15HRIT_PROLOGUE ) {
 		fprintf( stderr, "ERROR: %s not a SEVIRI prologue file\n", file );
 		goto err_out;
+	}
+
+	/* work-around for broken EUMETSAT archive HRITs */
+	if( ((int)pro->data_len)==0 ){
+		file_size(file, &nbyte);
+		nbyte = nbyte - pro->header_len;
+		pro->data_len = nbyte*8;
+		printf("Fixing prologue len: %d\n", pro->data_len);
 	}
 
 	data = xrit_read_data( pro );
@@ -628,6 +638,7 @@ struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file )
 	struct xrit_file *epi = NULL;
 	void *data = NULL;
 	void *rec_ptr;
+	off_t nbyte;
 
 	/* allocate structure */
 	trailer = calloc(1,sizeof(*trailer));
@@ -637,6 +648,14 @@ struct msevi_l15_trailer *msevi_l15hrit_read_epilogue( char *file )
 	if( epi==NULL || epi->ftype != MSEVI_L15HRIT_EPILOGUE ) {
 		fprintf( stderr, "ERROR: %s not a SEVIRI epilogue file\n", file );
 		goto err_out;
+	}
+
+	/* work-around for broken EUMETSAT archive HRITs */
+	if( ((int)epi->data_len)==0 ){
+		file_size(file, &nbyte);
+		nbyte = nbyte - epi->header_len;
+		epi->data_len = nbyte*8;
+		printf("Fixing epilogue data_len: %d\n", epi->data_len);
 	}
 
 	/* read data section */
